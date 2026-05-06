@@ -1,14 +1,25 @@
 import SwiftUI
 import PulseWatchAPI
+import PulseWatchSync
 import PulseWatchVault
 
 @main
 struct PulseWatchApp: App {
     @StateObject private var state = AppState()
 
+    init() {
+        WatchSync.shared.activate()
+    }
+
     var body: some Scene {
         WindowGroup {
-            RootView().environmentObject(state)
+            RootView()
+                .environmentObject(state)
+                .onChange(of: state.session?.token) { _, _ in
+                    if let stored = state.session {
+                        try? WatchSync.shared.sendSession(stored)
+                    }
+                }
         }
     }
 }

@@ -1,13 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { newSessionToken } from '../security/crypto.js';
+import { hashToken, newSessionToken } from '../security/crypto.js';
 
 const SESSION_TTL_DAYS = 90;
 
 const EnrollBody = z.object({
   platform: z.enum(['ios', 'android', 'watchos', 'wearos', 'desktop']),
   public_key: z.string().min(32).max(512),
-  pairing_code: z.string().regex(/^\d{6}$/),
+  pairing_code: z.string().regex(/^\d{6}$/).optional(),
   device_name: z.string().max(64).optional(),
 });
 
@@ -15,13 +15,29 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/v1/auth/devices', async (req, reply) => {
     const body = EnrollBody.parse(req.body);
 
-    // For M1 the pairing flow is stubbed: a device enrolls itself and gets its
-    // own user. Phone↔watch pairing is implemented in M3 via a pairing-code
-    // exchange that joins both devices to the same user_id.
-    const userRows = await app.sql<{ id: string }[]>`
-      insert into users default values returning id
-    `;
-    const userId = userRows[0]!.id;
+    // If a pairing_code is supplied, look up an active pairing and join the
+    // new device to that user_id. Otherwise mint a brand new user.
+    let userId: string;
+    let pairingId: string | null = null;
+    if (body.pairing_code) {
+      const codeHash = hashToken(body.pairing_code);
+      const rows = await app.sql<{ id: string; user_id: string }[]>`
+        select id, user_id from pairings
+        where code_hash = ${codeHash}
+          and consumed_at is null
+          and expires_at > now()
+        limit 1
+      `;
+      const pairing = rows[0];
+      if (!pairing) return reply.code(400).send({ error: 'invalid_or_expired_pairing' });
+      userId = pairing.user_id;
+      pairingId = pairing.id;
+    } else {
+      const userRows = await app.sql<{ id: string }[]>`
+        insert into users default values returning id
+      `;
+      userId = userRows[0]!.id;
+    }
 
     const deviceRows = await app.sql<{ id: string }[]>`
       insert into devices (user_id, platform, device_name, public_key)
@@ -34,6 +50,14 @@ export async function authRoutes(app: FastifyInstance) {
       returning id
     `;
     const deviceId = deviceRows[0]!.id;
+
+    if (pairingId) {
+      await app.sql`
+        update pairings
+        set consumed_at = now(), consumed_by_device = ${deviceId}
+        where id = ${pairingId}
+      `;
+    }
 
     const { token, hash } = newSessionToken();
     const expiresAt = new Date(Date.now() + SESSION_TTL_DAYS * 24 * 3600 * 1000);

@@ -19,8 +19,13 @@ export interface Health {
 export interface DeviceEnrollRequest {
   platform: DevicePlatform;
   public_key: string;
-  pairing_code: string;
+  pairing_code?: string;
   device_name?: string;
+}
+
+export interface Pairing {
+  code: string;
+  expires_at: string;
 }
 
 export interface Session {

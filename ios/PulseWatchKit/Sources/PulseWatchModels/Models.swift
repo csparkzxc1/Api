@@ -26,6 +26,11 @@ public struct Session: Codable, Sendable {
     public let expires_at: String
 }
 
+public struct Pairing: Codable, Sendable {
+    public let code: String
+    public let expires_at: String
+}
+
 public struct WrappingKey: Codable, Sendable {
     public let kid: String
     public let public_key: String
@@ -70,6 +75,26 @@ public struct ProviderSummary: Codable, Sendable, Identifiable {
     public let projected_exhaustion_at: String?
 
     public var id: String { "\(provider.rawValue):\(unit.rawValue)" }
+
+    public init(
+        provider: Provider,
+        label: String?,
+        used: Double,
+        limit: Double?,
+        unit: UsageUnit,
+        percent: Double?,
+        resets_at: String?,
+        projected_exhaustion_at: String?
+    ) {
+        self.provider = provider
+        self.label = label
+        self.used = used
+        self.limit = limit
+        self.unit = unit
+        self.percent = percent
+        self.resets_at = resets_at
+        self.projected_exhaustion_at = projected_exhaustion_at
+    }
 }
 
 public struct UsageSummary: Codable, Sendable {
@@ -110,6 +135,13 @@ public struct AlertThreshold: Codable, Identifiable, Sendable {
 public struct DeviceEnrollRequest: Codable, Sendable {
     public let platform: DevicePlatform
     public let public_key: String
-    public let pairing_code: String
+    public let pairing_code: String?
     public let device_name: String?
+
+    public init(platform: DevicePlatform, public_key: String, pairing_code: String? = nil, device_name: String? = nil) {
+        self.platform = platform
+        self.public_key = public_key
+        self.pairing_code = pairing_code
+        self.device_name = device_name
+    }
 }

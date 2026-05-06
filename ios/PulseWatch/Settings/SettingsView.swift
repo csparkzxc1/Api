@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var state: AppState
+    @State private var pairing = false
 
     var body: some View {
         NavigationStack {
@@ -15,6 +16,13 @@ struct SettingsView: View {
                         }
                     }
                 }
+                Section("Apple Watch") {
+                    Button {
+                        pairing = true
+                    } label: {
+                        Label("Pair Apple Watch", systemImage: "applewatch.and.arrow.forward")
+                    }
+                }
                 Section {
                     Button("Sign out", role: .destructive) {
                         state.signOut()
@@ -25,6 +33,9 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $pairing) {
+                PairWatchView()
+            }
         }
     }
 }

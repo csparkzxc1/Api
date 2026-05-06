@@ -40,7 +40,7 @@ public final class APIClient: @unchecked Sendable {
     public func enrollDevice(
         platform: DevicePlatform,
         publicKey: Data,
-        pairingCode: String,
+        pairingCode: String? = nil,
         deviceName: String?
     ) async throws -> Session {
         let body = DeviceEnrollRequest(
@@ -50,6 +50,10 @@ public final class APIClient: @unchecked Sendable {
             device_name: deviceName
         )
         return try await send("/v1/auth/devices", method: "POST", body: body, authed: false)
+    }
+
+    public func createPairing() async throws -> Pairing {
+        try await send("/v1/auth/pairings", method: "POST", body: EmptyBody())
     }
 
     // MARK: wrapping keys
@@ -116,6 +120,7 @@ public final class APIClient: @unchecked Sendable {
     // MARK: low-level
 
     private struct EmptyResponse: Decodable {}
+    private struct EmptyBody: Encodable {}
 
     private func send<R: Decodable>(
         _ path: String,

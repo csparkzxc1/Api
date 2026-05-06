@@ -11,13 +11,14 @@ public final class EnrollmentFlow: @unchecked Sendable {
 
     /// Performs `POST /v1/auth/devices` and persists the bearer token. Returns
     /// the device id so the caller can show it on the device-management screen.
-    public func enrollPhone(deviceName: String?) async throws -> String {
-        // X25519 keypair used later for phone↔watch pairing in M3.
+    public func enrollDevice(
+        platform: DevicePlatform,
+        deviceName: String?,
+        pairingCode: String? = nil
+    ) async throws -> String {
         let kp = Curve25519.KeyAgreement.PrivateKey()
-        let pairingCode = String(format: "%06d", Int.random(in: 0..<1_000_000))
-
         let s = try await client.enrollDevice(
-            platform: .ios,
+            platform: platform,
             publicKey: kp.publicKey.rawRepresentation,
             pairingCode: pairingCode,
             deviceName: deviceName
@@ -25,6 +26,10 @@ public final class EnrollmentFlow: @unchecked Sendable {
         let expires = ISO8601DateFormatter().date(from: s.expires_at) ?? Date(timeIntervalSinceNow: 90 * 86400)
         try client.session.save(.init(deviceId: s.device_id, token: s.token, expiresAt: expires, baseURL: client.baseURL))
         return s.device_id
+    }
+
+    public func enrollPhone(deviceName: String?) async throws -> String {
+        try await enrollDevice(platform: .ios, deviceName: deviceName)
     }
 
     /// Wraps the provider key for the backend and creates the account. The

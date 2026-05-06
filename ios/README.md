@@ -7,22 +7,31 @@ SwiftUI phone app with a paired watchOS target.
 ```
 ios/
 ├── project.yml                      # XcodeGen manifest
-├── PulseWatch/                      # phone app target
+├── PulseWatch/                      # iOS phone app target
 │   ├── PulseWatchApp.swift
 │   ├── AppState.swift
 │   ├── Onboarding/
 │   ├── Dashboard/
 │   ├── Accounts/
-│   ├── Settings/
-│   └── Resources/                   # Info.plist + Assets.xcassets
+│   ├── Settings/                    # incl. PairWatchView
+│   └── Resources/
+├── PulseWatchWatch/                 # watchOS app target
+│   ├── PulseWatchWatchApp.swift
+│   ├── WatchAppState.swift
+│   ├── GlanceView.swift
+│   └── Resources/
+├── PulseWatchComplications/         # watchOS WidgetKit extension
+│   ├── PulseWatchComplications.swift  # WidgetBundle
+│   ├── UsageProvider.swift            # TimelineProvider
+│   ├── UsageComplication.swift        # 4 supported families
+│   └── Resources/
 └── PulseWatchKit/                   # Swift Package
     ├── Package.swift
-    ├── Sources/
-    │   ├── PulseWatchModels/        # Codable DTOs mirroring openapi.yaml
-    │   ├── PulseWatchVault/         # Keychain, EnvelopeCipher (ECIES), SessionStore
-    │   └── PulseWatchAPI/           # APIClient + EnrollmentFlow
-    └── Tests/
-        └── PulseWatchKitTests/
+    └── Sources/
+        ├── PulseWatchModels/        # Codable DTOs mirroring openapi.yaml
+        ├── PulseWatchVault/         # Keychain, EnvelopeCipher, SessionStore
+        ├── PulseWatchSync/          # WatchConnectivity helper
+        └── PulseWatchAPI/           # APIClient + EnrollmentFlow
 ```
 
 ## Generate the Xcode project
@@ -50,7 +59,28 @@ When the user adds an Anthropic or OpenAI account:
 The backend decapsulates with the matching X25519 private key, immediately
 re-wraps the plaintext under its at-rest KEK, and never persists the bare key.
 
-## Watch updates
+## Phone ↔ Watch pairing
 
-M3 will add the watchOS target with `WidgetKit` complications and
-`WatchConnectivity` sync. M6 wires APNs to push complication-update tokens.
+Two-step flow that matches the OpenAPI:
+
+1. The phone hits `POST /v1/auth/pairings` to mint a 6-digit, 5-minute,
+   single-use code. The phone displays it (Settings → Pair Apple Watch) and
+   forwards it to the watch via `WCSession.transferUserInfo`.
+2. The watch receives the code in `WatchSync.shared.onPairingCodeReceived` and
+   calls `POST /v1/auth/devices` with `pairing_code: <code>`. The backend
+   joins the watch to the same `user_id`, returns a watch-scoped bearer token,
+   and marks the pairing consumed.
+
+Until the watch enrolls itself, the phone may also forward its own session via
+`WatchSync.shared.sendSession`, giving the watch immediate read-only access.
+
+## Complications
+
+`PulseWatchComplications` is a WidgetKit extension that ships:
+- `accessoryCorner`, `accessoryCircular`, `accessoryRectangular`,
+  `accessoryInline`.
+- `UsageProvider` reads the shared `SessionStore` from the keychain and calls
+  `GET /v1/usage/summary?window=day`. It returns the highest-percent provider
+  so the wrist-glance number is the quota the user is actually about to blow.
+- Refresh policy is `.after(now + 15 min)`. M6 layers APNs `complication`
+  tokens on top so threshold-fire events update sooner.

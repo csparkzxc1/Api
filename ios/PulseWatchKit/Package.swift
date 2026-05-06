@@ -9,7 +9,10 @@ let package = Package(
         .macOS(.v14)
     ],
     products: [
-        .library(name: "PulseWatchKit", targets: ["PulseWatchAPI", "PulseWatchVault", "PulseWatchModels"])
+        .library(
+            name: "PulseWatchKit",
+            targets: ["PulseWatchAPI", "PulseWatchVault", "PulseWatchModels", "PulseWatchSync"]
+        )
     ],
     targets: [
         .target(name: "PulseWatchModels"),
@@ -19,6 +22,10 @@ let package = Package(
         ),
         .target(
             name: "PulseWatchAPI",
+            dependencies: ["PulseWatchModels", "PulseWatchVault"]
+        ),
+        .target(
+            name: "PulseWatchSync",
             dependencies: ["PulseWatchModels", "PulseWatchVault"]
         ),
         .testTarget(

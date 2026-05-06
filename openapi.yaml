@@ -74,6 +74,22 @@ paths:
       responses:
         '204': { description: Revoked }
 
+  /v1/auth/pairings:
+    post:
+      tags: [auth]
+      summary: Mint a 6-digit pairing code so a companion device can join the same user
+      description: |
+        Authenticated as the originating phone. The phone forwards the returned
+        `code` to the companion (e.g. via WatchConnectivity), which then calls
+        `POST /v1/auth/devices` with `pairing_code` set. Codes expire after 5
+        minutes and are single-use.
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pairing' }
+
   /v1/wrapping-keys/current:
     get:
       tags: [wrapping-keys]
@@ -278,7 +294,7 @@ components:
 
     DeviceEnrollRequest:
       type: object
-      required: [platform, public_key, pairing_code]
+      required: [platform, public_key]
       properties:
         platform:
           type: string
@@ -288,9 +304,24 @@ components:
           description: Base64 X25519 public key used for end-to-end key wrapping
         pairing_code:
           type: string
-          description: 6-digit code shown on the phone during onboarding
+          pattern: '^\d{6}$'
+          description: |
+            Optional. When present, the new device joins the user that issued
+            the pairing code via `POST /v1/auth/pairings`. When absent, a new
+            user is created.
         device_name:
           type: string
+
+    Pairing:
+      type: object
+      required: [code, expires_at]
+      properties:
+        code:
+          type: string
+          pattern: '^\d{6}$'
+        expires_at:
+          type: string
+          format: date-time
 
     Session:
       type: object
