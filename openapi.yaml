@@ -1,0 +1,436 @@
+openapi: 3.1.0
+info:
+  title: PulseWatch API
+  version: 0.1.0
+  summary: Backend API for the PulseWatch AI usage monitor.
+  description: |
+    The PulseWatch backend aggregates usage and cost data from the Anthropic
+    Admin API and the OpenAI Usage API on behalf of authenticated users, and
+    exposes it to the phone and watch apps through a small REST surface.
+
+    ### Authentication
+
+    All endpoints (except `/v1/auth/*` and `/healthz`) require a
+    `Bearer <session_token>` header. Session tokens are minted by
+    `POST /v1/auth/devices` after a phone completes the device-pairing flow.
+
+    ### Provider keys
+
+    Provider API keys are encrypted on the phone before being sent. The body
+    of `POST /v1/accounts` carries a `wrapped_key` (base64 ciphertext) and a
+    `kid` identifying the wrapping key version. The backend never sees
+    plaintext provider keys.
+servers:
+  - url: https://api.pulsewatch.app
+  - url: http://localhost:8080
+    description: Local dev
+tags:
+  - name: auth
+  - name: accounts
+  - name: usage
+  - name: alerts
+  - name: agent
+  - name: system
+paths:
+  /healthz:
+    get:
+      tags: [system]
+      summary: Liveness probe
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+  /v1/auth/devices:
+    post:
+      tags: [auth]
+      summary: Register a phone or watch device and mint a session token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceEnrollRequest'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+
+  /v1/auth/devices/{device_id}:
+    delete:
+      tags: [auth]
+      summary: Revoke a device session
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204': { description: Revoked }
+
+  /v1/accounts:
+    get:
+      tags: [accounts]
+      summary: List provider accounts the caller has enrolled
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Account' }
+    post:
+      tags: [accounts]
+      summary: Enroll a provider account (Anthropic or OpenAI)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+
+  /v1/accounts/{account_id}:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    get:
+      tags: [accounts]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+    delete:
+      tags: [accounts]
+      responses:
+        '204': { description: Removed }
+
+  /v1/accounts/{account_id}/refresh:
+    parameters:
+      - $ref: '#/components/parameters/AccountId'
+    post:
+      tags: [accounts]
+      summary: Force an immediate poll of this account
+      responses:
+        '202':
+          description: Refresh enqueued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RefreshAck' }
+
+  /v1/usage/summary:
+    get:
+      tags: [usage]
+      summary: Watch-friendly snapshot — used by complications and tiles
+      parameters:
+        - in: query
+          name: window
+          schema:
+            type: string
+            enum: [hour, day, week, month, reset_window]
+            default: day
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UsageSummary' }
+
+  /v1/usage/series:
+    get:
+      tags: [usage]
+      summary: Time-bucketed series for the dashboard
+      parameters:
+        - in: query
+          name: account_id
+          schema: { type: string, format: uuid }
+        - in: query
+          name: from
+          required: true
+          schema: { type: string, format: date-time }
+        - in: query
+          name: to
+          required: true
+          schema: { type: string, format: date-time }
+        - in: query
+          name: bucket
+          schema:
+            type: string
+            enum: [hour, day]
+            default: day
+        - in: query
+          name: group_by
+          schema:
+            type: string
+            enum: [model, provider, none]
+            default: none
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UsageSeries' }
+
+  /v1/alerts/thresholds:
+    get:
+      tags: [alerts]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AlertThreshold' }
+    put:
+      tags: [alerts]
+      summary: Replace the caller's alert thresholds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/AlertThresholdInput' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AlertThreshold' }
+
+  /v1/agent/ingest:
+    post:
+      tags: [agent]
+      summary: Desktop agent uploads incremental Claude Code / Codex log counters
+      description: |
+        Used by the Tauri desktop agent to deliver locally-parsed counters that
+        can't be obtained from a public provider API (e.g. Claude Code Pro/Max
+        5-hour reset window). Payload is restricted to numeric counters — never
+        prompt or completion content.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AgentIngest' }
+      responses:
+        '202': { description: Accepted }
+
+components:
+  parameters:
+    AccountId:
+      in: path
+      name: account_id
+      required: true
+      schema: { type: string, format: uuid }
+    DeviceId:
+      in: path
+      name: device_id
+      required: true
+      schema: { type: string, format: uuid }
+
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+
+  schemas:
+    Health:
+      type: object
+      required: [status, version, time]
+      properties:
+        status: { type: string, enum: [ok] }
+        version: { type: string }
+        time: { type: string, format: date-time }
+
+    DeviceEnrollRequest:
+      type: object
+      required: [platform, public_key, pairing_code]
+      properties:
+        platform:
+          type: string
+          enum: [ios, android, watchos, wearos, desktop]
+        public_key:
+          type: string
+          description: Base64 X25519 public key used for end-to-end key wrapping
+        pairing_code:
+          type: string
+          description: 6-digit code shown on the phone during onboarding
+        device_name:
+          type: string
+
+    Session:
+      type: object
+      required: [device_id, token, expires_at]
+      properties:
+        device_id: { type: string, format: uuid }
+        token: { type: string }
+        expires_at: { type: string, format: date-time }
+
+    Provider:
+      type: string
+      enum: [anthropic, openai]
+
+    AccountCreate:
+      type: object
+      required: [provider, label, wrapped_key, kid]
+      properties:
+        provider: { $ref: '#/components/schemas/Provider' }
+        label: { type: string, maxLength: 64 }
+        wrapped_key:
+          type: string
+          description: Base64 ciphertext of the provider API key (and admin key for Anthropic)
+        kid:
+          type: string
+          description: Wrapping-key identifier (rotation aware)
+        org_id:
+          type: string
+          description: Required for OpenAI; ignored for Anthropic
+
+    Account:
+      type: object
+      required: [id, provider, label, created_at, status]
+      properties:
+        id: { type: string, format: uuid }
+        provider: { $ref: '#/components/schemas/Provider' }
+        label: { type: string }
+        org_id: { type: string }
+        created_at: { type: string, format: date-time }
+        last_polled_at: { type: string, format: date-time, nullable: true }
+        status:
+          type: string
+          enum: [pending, active, error]
+        error_message: { type: string, nullable: true }
+
+    RefreshAck:
+      type: object
+      required: [account_id, enqueued_at]
+      properties:
+        account_id: { type: string, format: uuid }
+        enqueued_at: { type: string, format: date-time }
+
+    UsageSummary:
+      type: object
+      required: [generated_at, window, providers]
+      properties:
+        generated_at: { type: string, format: date-time }
+        window:
+          type: string
+          enum: [hour, day, week, month, reset_window]
+        providers:
+          type: array
+          items: { $ref: '#/components/schemas/ProviderSummary' }
+
+    ProviderSummary:
+      type: object
+      required: [provider, used, limit, unit, percent]
+      properties:
+        provider: { $ref: '#/components/schemas/Provider' }
+        label: { type: string }
+        used: { type: number }
+        limit: { type: number, nullable: true }
+        unit:
+          type: string
+          enum: [usd, tokens, requests]
+        percent:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
+        resets_at:
+          type: string
+          format: date-time
+          nullable: true
+        projected_exhaustion_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    UsageSeries:
+      type: object
+      required: [bucket, points]
+      properties:
+        bucket:
+          type: string
+          enum: [hour, day]
+        points:
+          type: array
+          items: { $ref: '#/components/schemas/UsagePoint' }
+
+    UsagePoint:
+      type: object
+      required: [t, value]
+      properties:
+        t: { type: string, format: date-time }
+        value: { type: number }
+        group: { type: string, description: 'model id or provider id when group_by != none' }
+        unit:
+          type: string
+          enum: [usd, tokens, requests]
+
+    AlertThresholdInput:
+      type: object
+      required: [scope, percent]
+      properties:
+        scope:
+          type: string
+          enum: [provider_day, provider_month, claude_code_reset_window]
+        provider:
+          $ref: '#/components/schemas/Provider'
+        percent:
+          type: number
+          minimum: 0
+          maximum: 1
+        haptic:
+          type: boolean
+          default: true
+
+    AlertThreshold:
+      allOf:
+        - $ref: '#/components/schemas/AlertThresholdInput'
+        - type: object
+          required: [id, created_at]
+          properties:
+            id: { type: string, format: uuid }
+            created_at: { type: string, format: date-time }
+            last_fired_at: { type: string, format: date-time, nullable: true }
+
+    AgentIngest:
+      type: object
+      required: [agent_id, samples]
+      properties:
+        agent_id: { type: string, format: uuid }
+        samples:
+          type: array
+          items:
+            type: object
+            required: [t, source, input_tokens, output_tokens]
+            properties:
+              t: { type: string, format: date-time }
+              source:
+                type: string
+                enum: [claude_code, codex_cli]
+              model: { type: string }
+              input_tokens: { type: integer, minimum: 0 }
+              output_tokens: { type: integer, minimum: 0 }
+              cache_read_tokens: { type: integer, minimum: 0 }
+              cache_write_tokens: { type: integer, minimum: 0 }
+              cost_usd: { type: number, minimum: 0 }
+
+security:
+  - bearer: []

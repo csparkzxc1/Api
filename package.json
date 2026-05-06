@@ -1,0 +1,16 @@
+{
+  "name": "pulsewatch",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI API usage monitor for Apple Watch and Wear OS",
+  "packageManager": "pnpm@9.12.0",
+  "workspaces": [
+    "backend",
+    "shared-types"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  }
+}
