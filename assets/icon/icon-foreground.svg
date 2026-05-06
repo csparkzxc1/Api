@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Throttle adaptive-icon foreground.
+  Slider only; transparent background. Sized to fit inside the 66%
+  central safe zone so any launcher mask (circle, squircle, teardrop)
+  preserves both the track ends and the knob.
+
+  Adaptive-icon viewport is 108×108. Safe zone is the central 72×72.
+  The slider fills ~62% of the canvas so even an aggressive circular
+  mask doesn't crop the knob.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <defs>
+    <linearGradient id="knobShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#000" stop-opacity="0.0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.45"/>
+    </linearGradient>
+    <radialGradient id="knobLight" cx="40%" cy="32%" r="65%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="60%"  stop-color="#f6f6f6"/>
+      <stop offset="100%" stop-color="#e5e5e5"/>
+    </radialGradient>
+  </defs>
+
+  <!--
+    Track: 67×4.2, centred. (Master at 1024 = 500×40 → ÷ ~9.5 here.)
+    70% fill.
+  -->
+  <g transform="translate(20.5 51.9)">
+    <rect x="0" y="0" width="67" height="4.2" rx="2.1" fill="#3a1f14"/>
+    <rect x="0" y="0" width="46.9" height="4.2" rx="2.1" fill="#D97757"/>
+  </g>
+
+  <!-- Knob at the 70% mark (x = 20.5 + 46.9 = 67.4) -->
+  <g>
+    <ellipse cx="67.4" cy="56.9" rx="7.6" ry="2.3" fill="url(#knobShadow)" opacity="0.55"/>
+    <circle cx="67.4" cy="54" r="8.2" fill="url(#knobLight)"/>
+    <circle cx="67.4" cy="54" r="3.4" fill="#D97757"/>
+  </g>
+</svg>

@@ -14,10 +14,14 @@ if ! command -v rsvg-convert >/dev/null 2>&1; then
 fi
 
 render() {
-  local size=$1 out=$2
+  local size=$1 out=$2 svg=${3:-$src}
   mkdir -p "$(dirname "$out")"
-  rsvg-convert -w "$size" -h "$size" "$src" -o "$out"
+  rsvg-convert -w "$size" -h "$size" "$svg" -o "$out"
 }
+
+bg_src="$repo/assets/icon/icon-background.svg"
+fg_src="$repo/assets/icon/icon-foreground.svg"
+tray_src="$repo/assets/icon/tray-icon.svg"
 
 # ---------- iOS phone ------------------------------------------------------
 ios_set="$repo/ios/PulseWatch/Resources/Assets.xcassets/AppIcon.appiconset"
@@ -62,9 +66,11 @@ render  72 "$android/mipmap-hdpi/ic_launcher_round.png"
 render  96 "$android/mipmap-xhdpi/ic_launcher_round.png"
 render 144 "$android/mipmap-xxhdpi/ic_launcher_round.png"
 render 192 "$android/mipmap-xxxhdpi/ic_launcher_round.png"
-# Adaptive icon foreground — Android scales it 108→up; ship at xxxhdpi.
-render 432 "$android/mipmap-xxxhdpi/ic_launcher_foreground.png"
-render 432 "$android/drawable-xxxhdpi/ic_launcher_background.png"
+# Adaptive icon: foreground is the slider only (sized for the 66% safe
+# zone), background is the dark vignette plate. Shipped at xxxhdpi
+# (432px = 108dp × 4); Android downscales for lower densities.
+render 432 "$android/mipmap-xxxhdpi/ic_launcher_foreground.png" "$fg_src"
+render 432 "$android/drawable-xxxhdpi/ic_launcher_background.png" "$bg_src"
 
 # ---------- Wear OS -------------------------------------------------------
 wear="$repo/android/wear/src/main/res"
@@ -78,8 +84,8 @@ render  72 "$wear/mipmap-hdpi/ic_launcher_round.png"
 render  96 "$wear/mipmap-xhdpi/ic_launcher_round.png"
 render 144 "$wear/mipmap-xxhdpi/ic_launcher_round.png"
 render 192 "$wear/mipmap-xxxhdpi/ic_launcher_round.png"
-render 384 "$wear/mipmap-xxxhdpi/ic_launcher_foreground.png"
-render 384 "$wear/drawable-xxxhdpi/ic_launcher_background.png"
+render 384 "$wear/mipmap-xxxhdpi/ic_launcher_foreground.png" "$fg_src"
+render 384 "$wear/drawable-xxxhdpi/ic_launcher_background.png" "$bg_src"
 
 # ---------- Tauri agent ---------------------------------------------------
 tauri="$repo/desktop-agent/src-tauri/icons"
@@ -93,6 +99,13 @@ render   44 "$tauri/Square44x44Logo.png"
 render   71 "$tauri/Square71x71Logo.png"
 render  150 "$tauri/Square150x150Logo.png"
 render  310 "$tauri/Square310x310Logo.png"
+
+# Monochrome tray icon. macOS uses `iconAsTemplate: true` to invert it
+# for dark menu bars; Windows / Linux render the black silhouette as-is
+# (still legible on light or dark taskbars).
+render   22 "$tauri/tray-icon.png"     "$tray_src"
+render   44 "$tauri/tray-icon@2x.png"  "$tray_src"
+
 # Composite Windows .ico (multi-resolution) and macOS .icns from rendered PNGs.
 # The .ico ships 16/32/48/256 sizes; .icns ships up through 1024 retina.
 ico_tmp=$(mktemp -d)

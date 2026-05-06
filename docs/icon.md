@@ -5,8 +5,19 @@ white knob with the Claude-orange dot marks the current position. The
 icon is literal to the app name (Throttle) and to the metric the app
 exists to surface (your AI quota slider).
 
-The single source of truth is `assets/icon/icon.svg`. Every platform's
-size set is rendered from it by `assets/icon/render.sh`.
+## Sources
+
+There are four SVG masters in `assets/icon/`:
+
+| file                    | role                                                                  |
+|-------------------------|-----------------------------------------------------------------------|
+| `icon.svg`              | Composed marketing icon — slider on the dark vignette plate.          |
+| `icon-foreground.svg`   | Slider-only, sized for the central 66% of a 108×108 viewport. Used as the Android adaptive-icon foreground so any launcher mask (circle, squircle, teardrop) keeps both the track and the knob visible. |
+| `icon-background.svg`   | Dark vignette plate without the slider. Pairs with the foreground via `mipmap-anydpi-v26/ic_launcher{,_round}.xml`. |
+| `tray-icon.svg`         | Monochrome silhouette — black on transparent, with the inner dot punched as a real hole via `fill-rule: evenodd`. macOS uses `iconAsTemplate: true` to invert it for dark menu bars; Windows and Linux render the silhouette as-is. |
+
+`assets/icon/render.sh` reads all four and writes into the canonical
+resource directories.
 
 ## Regenerate
 

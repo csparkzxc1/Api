@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Throttle macOS menu-bar / system-tray icon.
+
+  Pure black + transparency (no opaque white pixels) so macOS's
+  `iconAsTemplate: true` inverts cleanly: white silhouette on dark menu
+  bars, black on light. Windows and Linux just render the black
+  silhouette as-is, which reads well on either taskbar treatment.
+
+  The knob is drawn as a single path with `fill-rule: evenodd` so the
+  inner dot is a real hole — it'll show through to whatever the menu
+  bar background is (matching the donut shape of the marketing icon
+  while staying valid as a template image).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Track -->
+  <rect x="6" y="29" width="52" height="6" rx="3" fill="#000"/>
+  <!-- Donut knob: outer 11px circle minus inner 4px circle (evenodd). -->
+  <path
+    d="M 42 21
+       a 11 11 0 1 0 0 22
+       a 11 11 0 1 0 0 -22
+       z
+       M 42 28
+       a 4 4 0 1 0 0 8
+       a 4 4 0 1 0 0 -8
+       z"
+    fill="#000" fill-rule="evenodd"/>
+</svg>

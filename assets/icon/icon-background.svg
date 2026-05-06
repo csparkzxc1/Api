@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Throttle adaptive-icon background.
+  Just the dark plate with a subtle radial vignette. The slider lives
+  in icon-foreground.svg, layered on top by Android at runtime.
+  108×108 = the canonical adaptive-icon viewport.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <defs>
+    <radialGradient id="vignette" cx="50%" cy="50%" r="65%">
+      <stop offset="0%"  stop-color="#1a1a1a"/>
+      <stop offset="60%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#vignette)"/>
+</svg>
