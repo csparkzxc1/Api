@@ -1,0 +1,71 @@
+name: desktop-agent-release
+
+on:
+  push:
+    tags:
+      - 'agent-v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform.name }}
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { name: macOS-arm64, runner: macos-14, target: aarch64-apple-darwin }
+          - { name: macOS-x86_64, runner: macos-13, target: x86_64-apple-darwin }
+          - { name: Windows, runner: windows-latest, target: x86_64-pc-windows-msvc }
+          - { name: Linux,   runner: ubuntu-22.04, target: x86_64-unknown-linux-gnu }
+    defaults:
+      run:
+        working-directory: desktop-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop-agent/src-tauri
+
+      - name: Run unit tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
+
+      - name: Build bundle
+        env:
+          # Apple notarisation. Empty in CI fork; the maintainer adds these as
+          # repo secrets. Builds without these still produce an unsigned .app.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # Windows code signing.
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          cargo install tauri-cli --version "^2" --locked
+          cargo tauri build --target ${{ matrix.platform.target }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pulsewatch-agent-${{ matrix.platform.name }}
+          path: |
+            desktop-agent/src-tauri/target/${{ matrix.platform.target }}/release/bundle/**
+            !desktop-agent/src-tauri/target/${{ matrix.platform.target }}/release/bundle/**/*.txt

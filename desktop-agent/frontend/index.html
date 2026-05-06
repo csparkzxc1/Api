@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PulseWatch Agent</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>PulseWatch Agent</h1>
+        <p id="subtitle">Streams local Claude Code &amp; Codex usage to your backend.</p>
+      </header>
+
+      <section id="enrolled-view" hidden>
+        <dl class="status">
+          <dt>Backend</dt><dd id="status-base-url">—</dd>
+          <dt>Device</dt><dd id="status-device-id">—</dd>
+          <dt>Last upload</dt><dd id="status-last-upload">—</dd>
+          <dt>State</dt><dd id="status-state">running</dd>
+        </dl>
+        <button id="pause-btn">Pause uploads</button>
+        <button id="signout-btn" class="danger">Sign out</button>
+      </section>
+
+      <section id="onboard-view" hidden>
+        <form id="enroll-form">
+          <label>Backend URL
+            <input id="base-url" type="url" placeholder="https://api.pulsewatch.app" required />
+          </label>
+          <label>Pairing code (from phone, optional)
+            <input id="pair-code" inputmode="numeric" pattern="[0-9]{6}" placeholder="123456" />
+          </label>
+          <p class="hint">If you leave the pairing code blank, this agent enrolls as a new account. Use the code from the PulseWatch phone app to attach it to your existing account.</p>
+          <button type="submit">Enroll this machine</button>
+          <p id="enroll-error" class="error" hidden></p>
+        </form>
+      </section>
+
+      <footer>
+        <p>Counters only — no prompts, completions, or file paths leave this machine.</p>
+      </footer>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

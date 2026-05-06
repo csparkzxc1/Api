@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "PulseWatch Agent",
+  "version": "0.1.0",
+  "identifier": "app.pulsewatch.agent",
+  "build": {
+    "frontendDist": "../frontend",
+    "devUrl": "http://localhost:5173"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "PulseWatch Agent",
+        "width": 480,
+        "height": 540,
+        "resizable": false,
+        "visible": false,
+        "decorations": true,
+        "transparent": false
+      }
+    ],
+    "trayIcon": {
+      "id": "pulsewatch-tray",
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": true,
+      "tooltip": "PulseWatch"
+    },
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "msi", "deb", "appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "AI usage monitor agent",
+    "longDescription": "Streams local Claude Code and Codex CLI usage counters to your PulseWatch backend so the watch app stays accurate. Never reads prompt or completion content."
+  },
+  "plugins": {}
+}
