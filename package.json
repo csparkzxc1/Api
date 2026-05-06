@@ -11,6 +11,13 @@
   "scripts": {
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "openapi:lint": "redocly lint openapi.yaml",
+    "openapi:gen": "openapi-typescript openapi.yaml -o shared-types/src/generated.ts",
+    "openapi:check": "pnpm openapi:gen && git diff --exit-code -- shared-types/src/generated.ts"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.30.3",
+    "openapi-typescript": "^7.13.0"
   }
 }

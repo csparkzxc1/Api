@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "start_time": 1714968000,
+      "end_time": 1714971600,
+      "results": [
+        {
+          "input_tokens": 12000,
+          "output_tokens": 4000,
+          "num_model_requests": 12,
+          "model": "gpt-5"
+        },
+        {
+          "input_tokens": 800,
+          "output_tokens": 200,
+          "num_model_requests": 3,
+          "model": "gpt-5-mini"
+        }
+      ]
+    },
+    {
+      "start_time": 1714971600,
+      "end_time": 1714975200,
+      "results": []
+    }
+  ]
+}

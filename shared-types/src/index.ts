@@ -134,3 +134,9 @@ export interface AgentIngest {
   agent_id: string;
   samples: AgentIngestSample[];
 }
+
+
+// --- generated mirror of openapi.yaml --------------------------------------
+// Refresh with `pnpm openapi:gen`. CI fails on drift between this and the
+// spec via `pnpm openapi:check`.
+export type * as schema from "./generated.js";

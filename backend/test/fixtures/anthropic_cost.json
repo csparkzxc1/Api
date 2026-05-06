@@ -1,0 +1,15 @@
+{
+  "data": [
+    {
+      "starting_at": "2026-05-06T00:00:00Z",
+      "ending_at": "2026-05-07T00:00:00Z",
+      "results": [
+        {
+          "starting_at": "2026-05-06T00:00:00Z",
+          "ending_at": "2026-05-07T00:00:00Z",
+          "amount": { "value": 14.62, "currency": "USD" }
+        }
+      ]
+    }
+  ]
+}

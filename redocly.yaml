@@ -1,0 +1,25 @@
+extends:
+  - minimal
+
+rules:
+  # Bugs we care about — keep at error.
+  no-invalid-media-type-examples: error
+  operation-operationId-unique: error
+  path-parameters-defined: error
+  no-path-trailing-slash: error
+  no-ambiguous-paths: error
+
+  # Hygiene we'll fix when shipping public docs, not now.
+  operation-4xx-response: off
+  operation-2xx-response: off
+  operation-summary: off
+  operation-description: off
+  operation-operationId: off
+  info-contact: off
+  info-license: off
+  tag-description: off
+  no-empty-servers: off
+  no-server-example.com: off
+  parameter-description: off
+  no-server-trailing-slash: off
+  security-defined: off

@@ -10,6 +10,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  openapi:
+    name: OpenAPI contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.12.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile=false
+      - name: Lint OpenAPI
+        run: pnpm openapi:lint
+      - name: Drift — generated types match openapi.yaml
+        run: pnpm openapi:check
+
   backend:
     name: Backend (TypeScript)
     runs-on: ubuntu-latest

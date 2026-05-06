@@ -1,0 +1,12 @@
+{
+  "data": [
+    {
+      "start_time": 1714867200,
+      "end_time": 1714953600,
+      "results": [
+        { "amount": { "value": 4.20, "currency": "USD" } },
+        { "amount": { "value": 0.31, "currency": "USD" } }
+      ]
+    }
+  ]
+}

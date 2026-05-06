@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "starting_at": "2026-05-06T08:00:00Z",
+      "ending_at": "2026-05-06T09:00:00Z",
+      "results": [
+        {
+          "starting_at": "2026-05-06T08:00:00Z",
+          "ending_at": "2026-05-06T09:00:00Z",
+          "input_tokens": 12000,
+          "output_tokens": 4500,
+          "cache_read_input_tokens": 32000,
+          "cache_creation_input_tokens": 1200,
+          "model": "claude-sonnet-4-6"
+        },
+        {
+          "starting_at": "2026-05-06T08:00:00Z",
+          "ending_at": "2026-05-06T09:00:00Z",
+          "input_tokens": 0,
+          "output_tokens": 0,
+          "model": "claude-haiku-4-5"
+        }
+      ]
+    },
+    {
+      "starting_at": "2026-05-06T09:00:00Z",
+      "ending_at": "2026-05-06T10:00:00Z",
+      "results": [
+        {
+          "starting_at": "2026-05-06T09:00:00Z",
+          "ending_at": "2026-05-06T10:00:00Z",
+          "input_tokens": 8000,
+          "output_tokens": 12000,
+          "model": "claude-sonnet-4-6"
+        }
+      ]
+    }
+  ],
+  "next_page": "page2"
+}

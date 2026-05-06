@@ -64,15 +64,10 @@ export async function buildServer() {
     reply.header('content-type', 'application/yaml').send(buf);
   });
 
-  await app.register(authRoutes);
-  await app.register(accountsRoutes);
-  await app.register(usageRoutes);
-  await app.register(alertsRoutes);
-  await app.register(agentRoutes);
-  await app.register(wrappingKeysRoutes);
-  await app.register(pairingsRoutes);
-  await app.register(pushTokensRoutes);
-
+  // Error handler must register before routes so its scope covers the
+  // route plugins. Otherwise ZodError throws fall through to Fastify's
+  // default handler and return 500 instead of the documented 400 +
+  // `{error:"invalid_body"}` shape.
   app.setErrorHandler((err, _req, reply) => {
     const e = err as { name?: string; message?: string; statusCode?: number; issues?: unknown };
     if (e.name === 'ZodError') {
@@ -82,6 +77,15 @@ export async function buildServer() {
     const status = e.statusCode ?? 500;
     return reply.code(status).send({ error: status >= 500 ? 'internal' : (e.message ?? 'error') });
   });
+
+  await app.register(authRoutes);
+  await app.register(accountsRoutes);
+  await app.register(usageRoutes);
+  await app.register(alertsRoutes);
+  await app.register(agentRoutes);
+  await app.register(wrappingKeysRoutes);
+  await app.register(pairingsRoutes);
+  await app.register(pushTokensRoutes);
 
   app.addHook('onClose', async () => {
     await pollQueue.close();
