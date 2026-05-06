@@ -1,16 +1,15 @@
 package app.pulsewatch.wear.tile
 
-import androidx.wear.protolayout.ColorBuilders.argb
 import androidx.wear.protolayout.DimensionBuilders.dp
 import androidx.wear.protolayout.LayoutElementBuilders
 import androidx.wear.protolayout.ResourceBuilders
 import androidx.wear.protolayout.TimelineBuilders
-import androidx.wear.protolayout.material.Text
-import androidx.wear.protolayout.material.Typography
-import androidx.wear.protolayout.material.layouts.PrimaryLayout
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.TileService
+import app.pulsewatch.core.api.Provider
+import app.pulsewatch.core.api.ProviderSummary
+import app.pulsewatch.core.api.UsageUnit
 import app.pulsewatch.core.api.UsageWindow
 import app.pulsewatch.wear.WearApp
 import com.google.common.util.concurrent.Futures
@@ -19,66 +18,59 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.future.future
+import java.util.concurrent.atomic.AtomicReference
 
-private const val RESOURCES_VERSION = "1"
 private const val FRESHNESS_MS = 15L * 60L * 1000L
+private const val TILE_IMAGE_ID = "throttle-tile-bitmap"
 
+/**
+ * Tile service that renders the Throttle round-tile design with native
+ * Android `Canvas`. The bitmap is shipped to the Tiles host via
+ * `InlineImageResource` (ARGB_8888) and displayed inside a single
+ * proto-layout `Image` element — this is the only practical way to get the
+ * radial halo and dashed dial that proto-layout's primitives don't expose.
+ */
 class UsageTileService : TileService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /// Holds the most recent rendered bitmap bytes between
+    /// `onTileRequest` and `onTileResourcesRequest`. The Tiles host uses
+    /// the version string to decide whether to re-fetch resources.
+    private val cache = AtomicReference<Cached?>(null)
+    private data class Cached(val bytes: ByteArray, val widthPx: Int, val heightPx: Int, val version: String)
+
     override fun onTileRequest(
-        requestParams: RequestBuilders.TileRequest,
+        request: RequestBuilders.TileRequest,
     ): ListenableFuture<TileBuilders.Tile> = scope.future {
-        val app = WearApp.from(application)
-        val client = app.apiClient()
-        val (title, subtitle, percent) = if (client == null) {
-            Triple("PulseWatch", "Open on phone", 0.0)
-        } else {
-            runCatching { client.usageSummary(UsageWindow.DAY) }
-                .map { summary ->
-                    val pick = summary.providers.maxByOrNull { it.percent ?: 0.0 }
-                    if (pick == null) Triple("No accounts", "Add on phone", 0.0)
-                    else Triple(
-                        pick.provider.name.lowercase().replaceFirstChar { it.uppercaseChar() },
-                        formatUsed(pick.unit, pick.used),
-                        pick.percent ?: 0.0,
-                    )
-                }
-                .getOrElse { Triple("PulseWatch", "Sync error", 0.0) }
-        }
+        val device = request.deviceConfiguration
+        val density = applicationContext.resources.displayMetrics.density
+        val widthPx = (device.screenWidthDp * density).toInt().coerceAtLeast(192)
+        val heightPx = (device.screenHeightDp * density).toInt().coerceAtLeast(192)
 
-        val deviceParams = requestParams.deviceConfiguration
+        val content = collectContent()
 
-        val layout = PrimaryLayout.Builder(deviceParams)
-            .setPrimaryLabelTextContent(
-                Text.Builder(applicationContext, title)
-                    .setColor(argb(0xFFFFFFFF.toInt()))
-                    .setTypography(Typography.TYPOGRAPHY_TITLE3)
-                    .build()
-            )
-            .setContent(
-                Text.Builder(applicationContext, "${(percent * 100).toInt()}%")
-                    .setColor(argb(rampColor(percent)))
-                    .setTypography(Typography.TYPOGRAPHY_DISPLAY1)
-                    .build()
-            )
-            .setSecondaryLabelTextContent(
-                Text.Builder(applicationContext, subtitle)
-                    .setColor(argb(0xFFB0B0B0.toInt()))
-                    .setTypography(Typography.TYPOGRAPHY_BODY2)
-                    .build()
-            )
+        val bitmap = renderUsageTileBitmap(applicationContext, widthPx, heightPx, content)
+        val bytes = bitmap.toArgb8888Bytes()
+        bitmap.recycle()
+        val version = "${content.hashCode()}-$widthPx"
+        cache.set(Cached(bytes, widthPx, heightPx, version))
+
+        val image = LayoutElementBuilders.Image.Builder()
+            .setResourceId(TILE_IMAGE_ID)
+            .setWidth(dp(device.screenWidthDp))
+            .setHeight(dp(device.screenHeightDp))
+            .setContentScaleMode(LayoutElementBuilders.CONTENT_SCALE_MODE_FILL_BOUNDS)
             .build()
 
         TileBuilders.Tile.Builder()
-            .setResourcesVersion(RESOURCES_VERSION)
+            .setResourcesVersion(version)
             .setFreshnessIntervalMillis(FRESHNESS_MS)
             .setTileTimeline(
                 TimelineBuilders.Timeline.Builder()
                     .addTimelineEntry(
                         TimelineBuilders.TimelineEntry.Builder()
-                            .setLayout(LayoutElementBuilders.Layout.Builder().setRoot(layout).build())
+                            .setLayout(LayoutElementBuilders.Layout.Builder().setRoot(image).build())
                             .build()
                     )
                     .build()
@@ -87,23 +79,92 @@ class UsageTileService : TileService() {
     }
 
     override fun onTileResourcesRequest(
-        requestParams: RequestBuilders.ResourcesRequest,
-    ): ListenableFuture<ResourceBuilders.Resources> =
-        Futures.immediateFuture(
-            ResourceBuilders.Resources.Builder().setVersion(RESOURCES_VERSION).build()
-        )
+        request: RequestBuilders.ResourcesRequest,
+    ): ListenableFuture<ResourceBuilders.Resources> {
+        val cached = cache.get()
+            ?: return Futures.immediateFuture(
+                ResourceBuilders.Resources.Builder().setVersion("0").build()
+            )
+        val resources = ResourceBuilders.Resources.Builder()
+            .setVersion(cached.version)
+            .addIdToImageMapping(
+                TILE_IMAGE_ID,
+                ResourceBuilders.ImageResource.Builder()
+                    .setInlineResource(
+                        ResourceBuilders.InlineImageResource.Builder()
+                            .setData(cached.bytes)
+                            .setWidthPx(cached.widthPx)
+                            .setHeightPx(cached.heightPx)
+                            .setFormat(ResourceBuilders.IMAGE_FORMAT_ARGB_8888)
+                            .build()
+                    )
+                    .build()
+            )
+            .build()
+        return Futures.immediateFuture(resources)
+    }
 
-    private fun formatUsed(unit: app.pulsewatch.core.api.UsageUnit, used: Double): String =
-        when (unit) {
-            app.pulsewatch.core.api.UsageUnit.USD -> String.format("$%.2f today", used)
-            app.pulsewatch.core.api.UsageUnit.TOKENS -> "${used.toLong()} tokens"
-            app.pulsewatch.core.api.UsageUnit.REQUESTS -> "${used.toLong()} req"
+    private suspend fun collectContent(): TileContent {
+        val app = WearApp.from(application)
+        val client = app.apiClient()
+            ?: return TileContent(
+                label = "Open on iPhone",
+                percent = 0.0,
+                resetText = "—",
+                secondary = null,
+            )
+
+        return runCatching { client.usageSummary(UsageWindow.DAY) }
+            .map { summary ->
+                val claude = summary.providers.firstOrNull { it.provider == Provider.ANTHROPIC }
+                val codex  = summary.providers.firstOrNull { it.provider == Provider.OPENAI }
+                val primary = claude ?: codex
+
+                if (primary == null) {
+                    return@map TileContent(
+                        label = "No accounts",
+                        percent = 0.0,
+                        resetText = "Add on iPhone",
+                        secondary = null,
+                    )
+                }
+
+                TileContent(
+                    label = labelFor(primary),
+                    percent = primary.percent ?: 0.0,
+                    resetText = resetText(primary),
+                    secondary = secondaryFor(primary, codex),
+                )
+            }
+            .getOrElse {
+                TileContent(
+                    label = "Sync error",
+                    percent = 0.0,
+                    resetText = "Retry in 15m",
+                    secondary = null,
+                )
+            }
+    }
+
+    private fun labelFor(p: ProviderSummary): String =
+        if (p.provider == Provider.ANTHROPIC) "Claude Code" else "OpenAI · Codex"
+
+    private fun resetText(p: ProviderSummary): String {
+        val resets = p.resets_at ?: return "—"
+        return "resets $resets"
+    }
+
+    /// If the primary card is Claude and Codex is also enrolled, surface
+    /// codex spend on the secondary line. Otherwise show the headline unit.
+    private fun secondaryFor(primary: ProviderSummary, codex: ProviderSummary?): TileContent.SecondaryItem? {
+        if (primary.provider == Provider.ANTHROPIC && codex != null) {
+            val v = if (codex.unit == UsageUnit.USD) "$" + "%.2f".format(codex.used) else "${codex.used.toLong()} tk"
+            return TileContent.SecondaryItem(value = v, label = "Codex left", accent = TileContent.Accent.CODEX)
         }
-
-    // Throttle palette mirrored from `docs/design-tokens.md`. Keep in sync.
-    private fun rampColor(percent: Double): Int = when {
-        percent > 0.90 -> 0xFFE11D48.toInt()           // critical red
-        percent > 0.75 -> 0xFFE8B54A.toInt()           // warn (Throttle warn)
-        else           -> 0xFFD97757.toInt()           // claude (default)
+        return when (primary.unit) {
+            UsageUnit.USD      -> TileContent.SecondaryItem("$" + "%.2f".format(primary.used), "today", TileContent.Accent.WARN)
+            UsageUnit.TOKENS   -> TileContent.SecondaryItem("${primary.used.toLong()} tk", "today", TileContent.Accent.CLAUDE)
+            UsageUnit.REQUESTS -> TileContent.SecondaryItem("${primary.used.toLong()} req", "today", TileContent.Accent.CLAUDE)
+        }
     }
 }

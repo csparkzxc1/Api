@@ -79,9 +79,14 @@ Identical wire format to the iOS `EnvelopeCipher.swift` and the backend
 
 ## Tile + Complication
 
-- Tile: `UsageTileService` returns a single timeline entry refreshed every
-  15 minutes (`freshnessIntervalMillis`). Picks the highest-percent provider
-  and renders `{label, percent, used}` with proto-layout Material widgets.
+- Tile: `UsageTileService` renders the round Throttle face — radial halo,
+  dashed dial, mono type stack — with native `android.graphics.Canvas`
+  in `TileRenderer.kt`, ships it as an `InlineImageResource` (ARGB_8888),
+  and hosts it inside a single proto-layout `Image` element. This is
+  the only practical way to get the mockup's gradient + dashed dial
+  past proto-layout's primitive set. Refresh cadence is 15 minutes
+  (`freshnessIntervalMillis`); FCM pushes call `requestUpdate(...)`
+  to refresh sooner on threshold breaches.
 - Complication: `UsageComplicationDataSourceService` supports `SHORT_TEXT`,
   `RANGED_VALUE`, and `LONG_TEXT`. M6 will replace the
   `UPDATE_PERIOD_SECONDS` poll with FCM data-only pushes that call
