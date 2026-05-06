@@ -102,8 +102,8 @@ fn spawn_workers(app: AppHandle) {
         let watcher = match core::watcher::start(
             paths.state_file.clone(),
             state.clone(),
-            paths.claude_root.clone(),
-            paths.codex_root.clone(),
+            paths.claude_roots.clone(),
+            paths.codex_roots.clone(),
         ) {
             Ok(w) => w,
             Err(e) => {

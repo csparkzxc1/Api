@@ -37,8 +37,8 @@ async fn watcher_emits_only_counters_and_resumes() {
     let mut watcher = start(
         state_path.clone(),
         state.clone(),
-        Some(claude_root.clone()),
-        None,
+        vec![claude_root.clone()],
+        Vec::new(),
     )
     .unwrap();
 
@@ -82,7 +82,13 @@ async fn watcher_emits_only_counters_and_resumes() {
     }
 
     let resumed_state = Arc::new(Mutex::new(load_state(&state_path).unwrap()));
-    let mut watcher2 = start(state_path.clone(), resumed_state, Some(claude_root), None).unwrap();
+    let mut watcher2 = start(
+        state_path.clone(),
+        resumed_state,
+        vec![claude_root],
+        Vec::new(),
+    )
+    .unwrap();
 
     let mut second = Vec::new();
     while let Ok(Some(s)) =

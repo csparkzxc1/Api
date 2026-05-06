@@ -82,6 +82,39 @@ the numeric counters and the model id — the parsers explicitly only
 deserialise the fields listed in `parser::claude_code::Line` and
 `parser::codex::Line`.
 
+## Where the agent looks for logs
+
+By default:
+
+- `~/.claude/projects/**/*.jsonl`
+- `~/.codex/sessions/**/*.jsonl`
+
+Override with comma-separated paths via env vars (separator is `;` on
+Windows, `:` elsewhere):
+
+```bash
+PULSEWATCH_CLAUDE_ROOT="/Users/me/.claude/projects:/Users/me/work/.claude/projects"
+PULSEWATCH_CODEX_ROOT="/Users/me/.codex/sessions"
+```
+
+### Windows + WSL
+
+Claude Code runs in WSL on Windows today. The agent ships two coverage
+strategies:
+
+1. **Recommended**: install the agent inside the WSL distro (`cargo build` /
+   `tauri build` in the WSL shell). The default paths resolve to the WSL
+   filesystem and everything just works.
+2. **Best-effort**: run the agent on Windows native and let it auto-probe
+   `\\wsl.localhost\<distro>\home\<user>\.claude\projects` for every running
+   distro that `wsl --list --quiet` reports. WSL must be started for the UNC
+   path to exist, and `notify`'s `ReadDirectoryChangesW` is less reliable
+   over `\\wsl.localhost\` than against a local NTFS path; if you see
+   missed events use option 1 instead.
+
+`PULSEWATCH_CLAUDE_ROOT` overrides both behaviours, so power users can
+explicitly target the right path.
+
 ## How it works
 
 1. **Enroll**: the user enters a backend URL (and optionally a 6-digit

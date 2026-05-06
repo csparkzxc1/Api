@@ -2637,7 +2637,6 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "dirs 5.0.1",
- "glob",
  "keyring",
  "notify",
  "notify-debouncer-full",
@@ -2649,6 +2648,7 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
+ "walkdir",
 ]
 
 [[package]]

@@ -9,7 +9,7 @@
 
 use crate::config::{save_state, WatcherState};
 use crate::parser::{claude_code, codex, Sample, Source};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use notify_debouncer_full::{
     new_debouncer,
     notify::{RecursiveMode, Watcher as _},
@@ -31,8 +31,8 @@ pub struct Watcher {
 pub fn start(
     state_path: PathBuf,
     state: Arc<Mutex<WatcherState>>,
-    claude_root: Option<PathBuf>,
-    codex_root: Option<PathBuf>,
+    claude_roots: Vec<PathBuf>,
+    codex_roots: Vec<PathBuf>,
 ) -> Result<Watcher> {
     let (sample_tx, sample_rx) = mpsc::channel::<Sample>(1024);
     let (event_tx, mut event_rx) = mpsc::channel::<Vec<DebouncedEvent>>(64);
@@ -47,19 +47,11 @@ pub fn start(
         },
     )?;
 
-    if let Some(p) = claude_root.as_ref() {
+    for p in claude_roots.iter().chain(codex_roots.iter()) {
         let _ = std::fs::create_dir_all(p);
-        debouncer
-            .watcher()
-            .watch(p, RecursiveMode::Recursive)
-            .context("watch claude root")?;
-    }
-    if let Some(p) = codex_root.as_ref() {
-        let _ = std::fs::create_dir_all(p);
-        debouncer
-            .watcher()
-            .watch(p, RecursiveMode::Recursive)
-            .context("watch codex root")?;
+        if let Err(e) = debouncer.watcher().watch(p, RecursiveMode::Recursive) {
+            tracing::warn!(path = %p.display(), error = %e, "watch failed; skipping");
+        }
     }
 
     // Initial sweep of any existing files so we don't miss usage written
@@ -67,10 +59,10 @@ pub fn start(
     // returning the Watcher so the caller can be sure that any subsequent
     // file events read offsets that already account for the sweep.
     let mut sweep_state = state.lock().unwrap().clone();
-    if let Some(root) = claude_root.as_ref() {
+    for root in &claude_roots {
         scan_sync(root, Source::ClaudeCode, &mut sweep_state, &sample_tx)?;
     }
-    if let Some(root) = codex_root.as_ref() {
+    for root in &codex_roots {
         scan_sync(root, Source::CodexCli, &mut sweep_state, &sample_tx)?;
     }
     {
@@ -80,8 +72,8 @@ pub fn start(
     }
 
     // Ongoing watcher loop.
-    let claude_root2 = claude_root.clone();
-    let codex_root2 = codex_root.clone();
+    let claude_set = claude_roots.clone();
+    let codex_set = codex_roots.clone();
     tokio::spawn(async move {
         while let Some(events) = event_rx.recv().await {
             for ev in events {
@@ -89,9 +81,9 @@ pub fn start(
                     if path.extension().and_then(|s| s.to_str()) != Some("jsonl") {
                         continue;
                     }
-                    let source = if claude_root2.as_ref().is_some_and(|r| path.starts_with(r)) {
+                    let source = if claude_set.iter().any(|r| path.starts_with(r)) {
                         Source::ClaudeCode
-                    } else if codex_root2.as_ref().is_some_and(|r| path.starts_with(r)) {
+                    } else if codex_set.iter().any(|r| path.starts_with(r)) {
                         Source::CodexCli
                     } else {
                         continue;
@@ -115,21 +107,34 @@ pub fn start(
 /// Synchronous sweep used during start-up. Reads each `.jsonl` file from its
 /// last known offset, emits parsed samples, and writes the new offset back
 /// into `state` before any async file event has a chance to fire.
+///
+/// Uses `walkdir` rather than `glob` so the recursion behaves identically on
+/// Windows (where `Path::display()` would emit backslashes that glob's
+/// pattern-matcher handles inconsistently).
 fn scan_sync(
     root: &Path,
     source: Source,
     state: &mut WatcherState,
     tx: &mpsc::Sender<Sample>,
 ) -> Result<()> {
-    let pattern = format!("{}/**/*.jsonl", root.display());
-    let glob = match glob::glob(&pattern) {
-        Ok(g) => g,
-        Err(_) => return Ok(()),
-    };
-    for entry in glob.flatten() {
-        let key = entry.to_string_lossy().into_owned();
+    if !root.exists() {
+        return Ok(());
+    }
+    for entry in walkdir::WalkDir::new(root)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        if entry.path().extension().and_then(|s| s.to_str()) != Some("jsonl") {
+            continue;
+        }
+        let path = entry.path().to_path_buf();
+        let key = path.to_string_lossy().into_owned();
         let offset = state.offsets.get(&key).copied().unwrap_or(0);
-        if let Ok(new_offset) = read_from_sync(&entry, offset, source.clone(), tx) {
+        if let Ok(new_offset) = read_from_sync(&path, offset, source.clone(), tx) {
             state.offsets.insert(key, new_offset);
         }
     }
