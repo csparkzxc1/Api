@@ -48,6 +48,14 @@ export interface AccountCreate {
   org_id?: string;
 }
 
+export interface AccountLimits {
+  daily_cap_usd?: number | null;
+  monthly_cap_usd?: number | null;
+  daily_cap_tokens?: number | null;
+  reset_window_cap_tokens?: number | null;
+  reset_window_seconds?: number;
+}
+
 export interface Account {
   id: string;
   provider: Provider;

@@ -3,19 +3,16 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager};
 
-pub mod api;
+use pulsewatch_agent_core as core;
+
 pub mod commands;
-pub mod config;
-pub mod parser;
-pub mod uploader;
-pub mod vault;
-pub mod watcher;
 
 pub fn run() {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info,pulsewatch_agent=debug")),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                tracing_subscriber::EnvFilter::new("info,pulsewatch_agent=debug")
+            }),
         )
         .compact()
         .init();
@@ -83,11 +80,13 @@ fn install_tray(app: &AppHandle) -> tauri::Result<()> {
 
 fn spawn_workers(app: AppHandle) {
     tauri::async_runtime::spawn(async move {
-        let session = match vault::Vault::load() {
+        let session = match core::vault::Vault::load() {
             Ok(Some(s)) => s,
             Ok(None) => {
                 tracing::info!("not enrolled — open the window to set up");
-                if let Some(w) = app.get_webview_window("main") { let _ = w.show(); }
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.show();
+                }
                 return;
             }
             Err(e) => {
@@ -96,11 +95,11 @@ fn spawn_workers(app: AppHandle) {
             }
         };
 
-        let paths = config::Paths::discover();
+        let paths = core::config::Paths::discover();
         let state = Arc::new(Mutex::new(
-            config::load_state(&paths.state_file).unwrap_or_default(),
+            core::config::load_state(&paths.state_file).unwrap_or_default(),
         ));
-        let watcher = match watcher::start(
+        let watcher = match core::watcher::start(
             paths.state_file.clone(),
             state.clone(),
             paths.claude_root.clone(),
@@ -113,12 +112,12 @@ fn spawn_workers(app: AppHandle) {
             }
         };
 
-        let client = api::ApiClient::new(&session.base_url);
+        let client = core::api::ApiClient::new(&session.base_url);
         let pause = app.state::<commands::AgentStatus>().paused.clone();
         let gated = paused_pass_through(watcher.samples, pause).await;
 
         tauri::async_runtime::spawn(async move {
-            uploader::run(client, session.token, session.agent_id, gated).await;
+            core::uploader::run(client, session.token, session.agent_id, gated).await;
         });
     });
 }
@@ -126,14 +125,18 @@ fn spawn_workers(app: AppHandle) {
 /// Pump samples through unless `pause` is true; in that case drop them on the
 /// floor (we don't want a queue building up for hours of paused uptime).
 async fn paused_pass_through(
-    mut rx: tokio::sync::mpsc::Receiver<parser::Sample>,
+    mut rx: tokio::sync::mpsc::Receiver<core::parser::Sample>,
     pause: Arc<Mutex<bool>>,
-) -> tokio::sync::mpsc::Receiver<parser::Sample> {
+) -> tokio::sync::mpsc::Receiver<core::parser::Sample> {
     let (out_tx, out_rx) = tokio::sync::mpsc::channel(1024);
     tauri::async_runtime::spawn(async move {
         while let Some(sample) = rx.recv().await {
-            if *pause.lock().unwrap() { continue; }
-            if out_tx.send(sample).await.is_err() { break; }
+            if *pause.lock().unwrap() {
+                continue;
+            }
+            if out_tx.send(sample).await.is_err() {
+                break;
+            }
         }
     });
     out_rx

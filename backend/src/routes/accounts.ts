@@ -129,6 +129,34 @@ export async function accountsRoutes(app: FastifyInstance) {
     },
   );
 
+  app.put<{ Params: { account_id: string } }>(
+    '/v1/accounts/:account_id/limits',
+    async (req, reply) => {
+      const { userId } = req.auth!;
+      const Limits = z.object({
+        daily_cap_usd: z.number().nonnegative().nullable().optional(),
+        monthly_cap_usd: z.number().nonnegative().nullable().optional(),
+        daily_cap_tokens: z.number().int().nonnegative().nullable().optional(),
+        reset_window_cap_tokens: z.number().int().nonnegative().nullable().optional(),
+        reset_window_seconds: z.number().int().positive().max(7 * 24 * 3600).optional(),
+      });
+      const body = Limits.parse(req.body);
+
+      const rows = await app.sql<AccountRow[]>`
+        update accounts set
+          daily_cap_usd = coalesce(${body.daily_cap_usd ?? null}, daily_cap_usd),
+          monthly_cap_usd = coalesce(${body.monthly_cap_usd ?? null}, monthly_cap_usd),
+          daily_cap_tokens = coalesce(${body.daily_cap_tokens ?? null}, daily_cap_tokens),
+          reset_window_cap_tokens = coalesce(${body.reset_window_cap_tokens ?? null}, reset_window_cap_tokens),
+          reset_window_seconds = coalesce(${body.reset_window_seconds ?? null}, reset_window_seconds)
+        where id = ${req.params.account_id} and user_id = ${userId} and removed_at is null
+        returning id, provider, label, org_id, status, error_message, last_polled_at, created_at
+      `;
+      if (rows.length === 0) return reply.code(404).send({ error: 'not_found' });
+      return toAccount(rows[0]!);
+    },
+  );
+
   app.post<{ Params: { account_id: string } }>(
     '/v1/accounts/:account_id/refresh',
     async (req, reply) => {

@@ -28,12 +28,18 @@ impl Paths {
         let home = dirs::home_dir();
         let claude_root = home.as_ref().map(|h| h.join(".claude").join("projects"));
         let codex_root = home.as_ref().map(|h| h.join(".codex").join("sessions"));
-        Self { state_file, claude_root, codex_root }
+        Self {
+            state_file,
+            claude_root,
+            codex_root,
+        }
     }
 }
 
 pub fn load_state(path: &Path) -> Result<WatcherState> {
-    if !path.exists() { return Ok(WatcherState::default()); }
+    if !path.exists() {
+        return Ok(WatcherState::default());
+    }
     let bytes = std::fs::read(path).with_context(|| format!("read {}", path.display()))?;
     Ok(serde_json::from_slice(&bytes).unwrap_or_default())
 }

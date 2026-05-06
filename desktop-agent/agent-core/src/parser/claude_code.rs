@@ -26,14 +26,20 @@ struct Message<'a> {
 
 #[derive(Deserialize, Default)]
 struct Usage {
-    #[serde(default)] input_tokens: u64,
-    #[serde(default)] output_tokens: u64,
-    #[serde(default)] cache_read_input_tokens: u64,
-    #[serde(default)] cache_creation_input_tokens: u64,
+    #[serde(default)]
+    input_tokens: u64,
+    #[serde(default)]
+    output_tokens: u64,
+    #[serde(default)]
+    cache_read_input_tokens: u64,
+    #[serde(default)]
+    cache_creation_input_tokens: u64,
 }
 
 pub fn parse_line(line: &str) -> Option<Sample> {
-    if line.trim().is_empty() { return None; }
+    if line.trim().is_empty() {
+        return None;
+    }
     let parsed: Line = serde_json::from_str(line).ok()?;
     let usage = parsed.message.as_ref().and_then(|m| m.usage.as_ref())?;
     let t: DateTime<Utc> = parsed
@@ -45,7 +51,11 @@ pub fn parse_line(line: &str) -> Option<Sample> {
     Sample {
         t,
         source: Source::ClaudeCode,
-        model: parsed.message.as_ref().and_then(|m| m.model).map(|s| s.to_string()),
+        model: parsed
+            .message
+            .as_ref()
+            .and_then(|m| m.model)
+            .map(|s| s.to_string()),
         input_tokens: usage.input_tokens,
         output_tokens: usage.output_tokens,
         cache_read_tokens: usage.cache_read_input_tokens,

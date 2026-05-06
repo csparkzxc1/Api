@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { generateKeyPairSync, createPublicKey, createVerify } from 'node:crypto';
+import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { ApnsTokenSource } from '../src/push/jwt.js';
 
 describe('APNs JWT', () => {
@@ -8,7 +8,9 @@ describe('APNs JWT', () => {
     const pem = privateKey.export({ format: 'pem', type: 'pkcs8' }).toString();
     const src = new ApnsTokenSource({ keyP8: pem, keyId: 'KEY1234567', teamId: 'TEAM123ABC' });
     const token = src.token();
-    const [h, p, s] = token.split('.');
+    const parts = token.split('.');
+    if (parts.length !== 3) throw new Error('expected 3-part JWT');
+    const [h, p, s] = parts as [string, string, string];
     const sig = Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 
     // Convert JOSE r||s back to DER for OpenSSL verification.
@@ -19,7 +21,7 @@ describe('APNs JWT', () => {
     const verify = createVerify('SHA256');
     verify.update(`${h}.${p}`);
     verify.end();
-    expect(verify.verify(createPublicKey(publicKey), der)).toBe(true);
+    expect(verify.verify(publicKey, der)).toBe(true);
 
     const decoded = JSON.parse(Buffer.from(p, 'base64url').toString('utf8'));
     expect(decoded.iss).toBe('TEAM123ABC');

@@ -1,7 +1,7 @@
 //! Tauri IPC commands invoked from the onboarding webview.
 
-use crate::api::{ApiClient, EnrollRequest};
-use crate::vault::{StoredSession, Vault};
+use pulsewatch_agent_core::api::{ApiClient, EnrollRequest};
+use pulsewatch_agent_core::vault::{StoredSession, Vault};
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -84,10 +84,14 @@ pub fn toggle_pause(state: State<'_, AgentStatus>) -> bool {
 fn generate_dummy_pubkey() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let mut buf = [0u8; 32];
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default();
     let mut seed = now.as_nanos();
     for slot in buf.iter_mut() {
-        seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        seed = seed
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         *slot = (seed >> 64) as u8;
     }
     use base64::Engine;

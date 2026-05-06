@@ -26,7 +26,11 @@ impl ApiClient {
         let url = format!("{}/v1/auth/devices", self.base_url.trim_end_matches('/'));
         let res = self.http.post(&url).json(req).send().await?;
         if !res.status().is_success() {
-            return Err(anyhow!("enroll {}: {}", res.status(), res.text().await.unwrap_or_default()));
+            return Err(anyhow!(
+                "enroll {}: {}",
+                res.status(),
+                res.text().await.unwrap_or_default()
+            ));
         }
         Ok(res.json().await?)
     }
@@ -41,7 +45,11 @@ impl ApiClient {
             .send()
             .await?;
         if !res.status().is_success() {
-            return Err(anyhow!("ingest {}: {}", res.status(), res.text().await.unwrap_or_default()));
+            return Err(anyhow!(
+                "ingest {}: {}",
+                res.status(),
+                res.text().await.unwrap_or_default()
+            ));
         }
         Ok(())
     }

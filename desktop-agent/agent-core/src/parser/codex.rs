@@ -22,13 +22,18 @@ struct Line<'a> {
 
 #[derive(Deserialize, Default)]
 struct Usage {
-    #[serde(default)] prompt_tokens: u64,
-    #[serde(default)] completion_tokens: u64,
-    #[serde(default)] cached_tokens: u64,
+    #[serde(default)]
+    prompt_tokens: u64,
+    #[serde(default)]
+    completion_tokens: u64,
+    #[serde(default)]
+    cached_tokens: u64,
 }
 
 pub fn parse_line(line: &str) -> Option<Sample> {
-    if line.trim().is_empty() { return None; }
+    if line.trim().is_empty() {
+        return None;
+    }
     let parsed: Line = serde_json::from_str(line).ok()?;
     let usage = parsed.usage.as_ref()?;
     let t: DateTime<Utc> = parsed

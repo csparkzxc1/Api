@@ -48,8 +48,12 @@ fn serialize_source<S: serde::Serializer>(s: &Source, ser: S) -> Result<S::Ok, S
     ser.serialize_str(s.as_wire())
 }
 
-fn is_zero(v: &u64) -> bool { *v == 0 }
-fn is_zero_f64(v: &f64) -> bool { *v == 0.0 }
+fn is_zero(v: &u64) -> bool {
+    *v == 0
+}
+fn is_zero_f64(v: &f64) -> bool {
+    *v == 0.0
+}
 
 impl Sample {
     /// Models accept arbitrary strings from the log; cap and sanitise before

@@ -20,7 +20,8 @@ describe('ECIES wrapping', () => {
     const { privHex } = generateWrappingKey();
     const kp = loadWrappingKeyFromHex(privHex);
     const wrapped = encapsulate(kp.publicKeyRaw, Buffer.from('sk'));
-    wrapped[wrapped.length - 1] ^= 1;
+    const last = wrapped.length - 1;
+    wrapped[last] = (wrapped[last] ?? 0) ^ 1;
     expect(() => decapsulate(kp, wrapped)).toThrow();
   });
 

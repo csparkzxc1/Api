@@ -13,28 +13,30 @@ function jwsSign(header: object, payload: object, key: KeyObject, alg: 'ES256' |
   const signer = alg === 'ES256' ? createSign('SHA256') : createSign('RSA-SHA256');
   signer.update(`${h}.${p}`);
   signer.end();
-  let sig = signer.sign(key);
-  if (alg === 'ES256') {
-    // Convert DER signature to JOSE r||s 64-byte format.
-    sig = derToJose(sig);
-  }
+  const raw = Buffer.from(signer.sign(key));
+  const sig = alg === 'ES256' ? derToJose(raw) : raw;
   return `${h}.${p}.${base64url(sig)}`;
 }
 
 // DER ECDSA signature → 64-byte r||s
 function derToJose(der: Buffer): Buffer {
+  const at = (k: number): number => {
+    const v = der[k];
+    if (v === undefined) throw new Error('bad DER: truncated');
+    return v;
+  };
   let i = 0;
-  if (der[i++] !== 0x30) throw new Error('bad DER: not a sequence');
+  if (at(i++) !== 0x30) throw new Error('bad DER: not a sequence');
   // length (skip; could be one byte or 0x81+len for >127 bytes — both possible)
-  if (der[i] && (der[i] & 0x80) !== 0) i += (der[i] & 0x7f) + 1; else i++;
-  if (der[i++] !== 0x02) throw new Error('bad DER: r tag');
-  let rLen = der[i++]!;
+  if ((at(i) & 0x80) !== 0) i += (at(i) & 0x7f) + 1; else i++;
+  if (at(i++) !== 0x02) throw new Error('bad DER: r tag');
+  const rLen = at(i++);
   let r = der.subarray(i, i + rLen); i += rLen;
-  if (der[i++] !== 0x02) throw new Error('bad DER: s tag');
-  let sLen = der[i++]!;
+  if (at(i++) !== 0x02) throw new Error('bad DER: s tag');
+  const sLen = at(i++);
   let s = der.subarray(i, i + sLen);
   // strip leading zero, left-pad to 32 bytes
-  const norm = (buf: Buffer) => {
+  const norm = (buf: Buffer): Buffer => {
     while (buf.length > 32 && buf[0] === 0) buf = buf.subarray(1);
     if (buf.length < 32) buf = Buffer.concat([Buffer.alloc(32 - buf.length, 0), buf]);
     return buf;

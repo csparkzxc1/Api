@@ -11,13 +11,13 @@ use crate::config::{save_state, WatcherState};
 use crate::parser::{claude_code, codex, Sample, Source};
 use anyhow::{Context, Result};
 use notify_debouncer_full::{
-    new_debouncer, notify::RecursiveMode, DebouncedEvent, DebounceEventResult,
+    new_debouncer,
+    notify::{RecursiveMode, Watcher as _},
+    DebounceEventResult, DebouncedEvent,
 };
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio::sync::mpsc;
 
 pub struct Watcher {
@@ -63,28 +63,21 @@ pub fn start(
     }
 
     // Initial sweep of any existing files so we don't miss usage written
-    // before the watcher attached.
-    let claude_clone = claude_root.clone();
-    let codex_clone = codex_root.clone();
-    let state_clone = state.clone();
-    let state_path_clone = state_path.clone();
-    let sample_tx_initial = sample_tx.clone();
-    tokio::spawn(async move {
-        let mut cache: HashMap<PathBuf, u64> = HashMap::new();
-        if let Some(root) = claude_clone {
-            scan(&root, Source::ClaudeCode, &state_clone, &mut cache, &sample_tx_initial).await;
-        }
-        if let Some(root) = codex_clone {
-            scan(&root, Source::CodexCli, &state_clone, &mut cache, &sample_tx_initial).await;
-        }
-        if !cache.is_empty() {
-            let mut s = state_clone.lock().unwrap();
-            for (p, off) in cache.drain() {
-                s.offsets.insert(p.to_string_lossy().into_owned(), off);
-            }
-            let _ = save_state(&state_path_clone, &s);
-        }
-    });
+    // before the watcher attached. We do the sweep synchronously *before*
+    // returning the Watcher so the caller can be sure that any subsequent
+    // file events read offsets that already account for the sweep.
+    let mut sweep_state = state.lock().unwrap().clone();
+    if let Some(root) = claude_root.as_ref() {
+        scan_sync(root, Source::ClaudeCode, &mut sweep_state, &sample_tx)?;
+    }
+    if let Some(root) = codex_root.as_ref() {
+        scan_sync(root, Source::CodexCli, &mut sweep_state, &sample_tx)?;
+    }
+    {
+        let mut s = state.lock().unwrap();
+        *s = sweep_state.clone();
+        let _ = save_state(&state_path, &s);
+    }
 
     // Ongoing watcher loop.
     let claude_root2 = claude_root.clone();
@@ -93,13 +86,19 @@ pub fn start(
         while let Some(events) = event_rx.recv().await {
             for ev in events {
                 for path in ev.paths.iter() {
-                    if path.extension().and_then(|s| s.to_str()) != Some("jsonl") { continue; }
+                    if path.extension().and_then(|s| s.to_str()) != Some("jsonl") {
+                        continue;
+                    }
                     let source = if claude_root2.as_ref().is_some_and(|r| path.starts_with(r)) {
                         Source::ClaudeCode
                     } else if codex_root2.as_ref().is_some_and(|r| path.starts_with(r)) {
                         Source::CodexCli
-                    } else { continue; };
-                    if let Err(e) = tail(path, source.clone(), &state, &state_path, &sample_tx).await {
+                    } else {
+                        continue;
+                    };
+                    if let Err(e) =
+                        tail(path, source.clone(), &state, &state_path, &sample_tx).await
+                    {
                         tracing::warn!(?path, error = %e, "tail failed");
                     }
                 }
@@ -107,33 +106,34 @@ pub fn start(
         }
     });
 
-    Ok(Watcher { samples: sample_rx, _debouncer: debouncer })
+    Ok(Watcher {
+        samples: sample_rx,
+        _debouncer: debouncer,
+    })
 }
 
-async fn scan(
+/// Synchronous sweep used during start-up. Reads each `.jsonl` file from its
+/// last known offset, emits parsed samples, and writes the new offset back
+/// into `state` before any async file event has a chance to fire.
+fn scan_sync(
     root: &Path,
     source: Source,
-    state: &Arc<Mutex<WatcherState>>,
-    cache: &mut HashMap<PathBuf, u64>,
+    state: &mut WatcherState,
     tx: &mpsc::Sender<Sample>,
-) {
+) -> Result<()> {
     let pattern = format!("{}/**/*.jsonl", root.display());
     let glob = match glob::glob(&pattern) {
         Ok(g) => g,
-        Err(_) => return,
+        Err(_) => return Ok(()),
     };
     for entry in glob.flatten() {
-        let offset = state
-            .lock()
-            .unwrap()
-            .offsets
-            .get(&entry.to_string_lossy().into_owned())
-            .copied()
-            .unwrap_or(0);
-        if let Ok(new_offset) = read_from(&entry, offset, source.clone(), tx).await {
-            cache.insert(entry, new_offset);
+        let key = entry.to_string_lossy().into_owned();
+        let offset = state.offsets.get(&key).copied().unwrap_or(0);
+        if let Ok(new_offset) = read_from_sync(&entry, offset, source.clone(), tx) {
+            state.offsets.insert(key, new_offset);
         }
     }
+    Ok(())
 }
 
 async fn tail(
@@ -144,7 +144,13 @@ async fn tail(
     tx: &mpsc::Sender<Sample>,
 ) -> Result<()> {
     let key = path.to_string_lossy().into_owned();
-    let offset = state.lock().unwrap().offsets.get(&key).copied().unwrap_or(0);
+    let offset = state
+        .lock()
+        .unwrap()
+        .offsets
+        .get(&key)
+        .copied()
+        .unwrap_or(0);
     let new_offset = read_from(path, offset, source, tx).await?;
     let mut s = state.lock().unwrap();
     s.offsets.insert(key, new_offset);
@@ -158,40 +164,60 @@ async fn read_from(
     source: Source,
     tx: &mpsc::Sender<Sample>,
 ) -> Result<u64> {
-    let mut file = tokio::fs::File::open(path).await?;
-    let len = file.metadata().await?.len();
-    if len < offset {
-        // file rotated or truncated; restart from 0
-        file.seek(std::io::SeekFrom::Start(0)).await?;
-    } else {
-        file.seek(std::io::SeekFrom::Start(offset)).await?;
+    let bytes = tokio::fs::read(path).await?;
+    let (samples, new_offset) = parse_chunk(&bytes, offset, source);
+    for s in samples {
+        let _ = tx.send(s).await;
     }
-    let mut buf = Vec::with_capacity((len.saturating_sub(offset)).min(1 << 20) as usize);
-    file.read_to_end(&mut buf).await?;
-    let consumed = buf.len() as u64;
-    let new_offset = if len < offset { consumed } else { offset + consumed };
+    Ok(new_offset)
+}
+
+fn read_from_sync(
+    path: &Path,
+    offset: u64,
+    source: Source,
+    tx: &mpsc::Sender<Sample>,
+) -> Result<u64> {
+    let bytes = std::fs::read(path)?;
+    let (samples, new_offset) = parse_chunk(&bytes, offset, source);
+    for s in samples {
+        // Sync send — bounded channel; if full we drop the rest, the next file
+        // event will pick them up on rescan.
+        if tx.try_send(s).is_err() {
+            break;
+        }
+    }
+    Ok(new_offset)
+}
+
+fn parse_chunk(bytes: &[u8], offset: u64, source: Source) -> (Vec<Sample>, u64) {
+    let len = bytes.len() as u64;
+    let from = if len < offset { 0 } else { offset as usize };
+    let slice = &bytes[from..];
+    let consumed = slice.len() as u64;
 
     // Drop a partial trailing line so we don't half-parse during a write.
-    let raw = std::str::from_utf8(&buf).unwrap_or("");
+    let raw = std::str::from_utf8(slice).unwrap_or("");
     let (text, partial_bytes): (&str, u64) = match raw.rfind('\n') {
         Some(last_nl) => {
             let trimmed = &raw[..=last_nl];
             (trimmed, consumed - trimmed.len() as u64)
         }
         None if raw.is_empty() => ("", 0),
-        // No newline yet — wait for one.
-        None => return Ok(offset),
+        None => return (Vec::new(), offset),
     };
 
+    let mut samples = Vec::new();
     for line in text.lines() {
         let sample = match source {
             Source::ClaudeCode => claude_code::parse_line(line),
             Source::CodexCli => codex::parse_line(line),
         };
         if let Some(s) = sample {
-            let _ = tx.send(s).await;
+            samples.push(s);
         }
     }
 
-    Ok(new_offset - partial_bytes)
+    let base = if len < offset { 0 } else { offset };
+    (samples, base + consumed - partial_bytes)
 }

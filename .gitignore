@@ -33,5 +33,6 @@ android/build/
 android/**/build/
 android/local.properties
 
-# Tauri
+# Tauri / Rust build artifacts (Cargo.lock is committed for the binary)
 desktop-agent/src-tauri/target/
+desktop-agent/target/

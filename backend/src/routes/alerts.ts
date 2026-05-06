@@ -47,20 +47,18 @@ export async function alertsRoutes(app: FastifyInstance) {
     const { userId } = req.auth!;
     const items = ThresholdsInput.parse(req.body);
 
-    const inserted = await app.sql.begin(async (tx) => {
+    const inserted: ThresholdRow[] = [];
+    await app.sql.begin(async (tx) => {
       await tx`delete from alert_thresholds where user_id = ${userId}`;
-      if (items.length === 0) return [] as ThresholdRow[];
-      const values = items.map((i) => ({
-        user_id: userId,
-        scope: i.scope,
-        provider: i.provider ?? null,
-        percent: i.percent,
-        haptic: i.haptic,
-      }));
-      return tx<ThresholdRow[]>`
-        insert into alert_thresholds ${tx(values, 'user_id', 'scope', 'provider', 'percent', 'haptic')}
-        returning id, scope, provider, percent, haptic, last_fired_at, created_at
-      `;
+      for (const i of items) {
+        const rows = await tx<ThresholdRow[]>`
+          insert into alert_thresholds (user_id, scope, provider, percent, haptic)
+          values (${userId}, ${i.scope}, ${i.provider ?? null}, ${i.percent}, ${i.haptic})
+          returning id, scope, provider, percent, haptic, last_fired_at, created_at
+        `;
+        const row = rows[0];
+        if (row) inserted.push(row);
+      }
     });
 
     return inserted.map(toThreshold);

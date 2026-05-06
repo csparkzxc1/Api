@@ -43,8 +43,13 @@ pub async fn run(
 }
 
 async fn flush(client: &ApiClient, token: &str, agent_id: &str, buf: &mut Vec<Sample>) {
-    if buf.is_empty() { return; }
-    let body = IngestBody { agent_id, samples: buf.as_slice() };
+    if buf.is_empty() {
+        return;
+    }
+    let body = IngestBody {
+        agent_id,
+        samples: buf.as_slice(),
+    };
 
     let mut attempt = 0u32;
     let mut delay = Duration::from_secs(2);

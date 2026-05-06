@@ -74,12 +74,13 @@ export async function buildServer() {
   await app.register(pushTokensRoutes);
 
   app.setErrorHandler((err, _req, reply) => {
-    if ((err as { name?: string }).name === 'ZodError') {
-      return reply.code(400).send({ error: 'invalid_body', issues: (err as { issues: unknown }).issues });
+    const e = err as { name?: string; message?: string; statusCode?: number; issues?: unknown };
+    if (e.name === 'ZodError') {
+      return reply.code(400).send({ error: 'invalid_body', issues: e.issues });
     }
     app.log.error({ err }, 'unhandled');
-    const status = err.statusCode ?? 500;
-    return reply.code(status).send({ error: status >= 500 ? 'internal' : err.message });
+    const status = e.statusCode ?? 500;
+    return reply.code(status).send({ error: status >= 500 ? 'internal' : (e.message ?? 'error') });
   });
 
   app.addHook('onClose', async () => {

@@ -1,7 +1,7 @@
 import type { Sql } from '../db/client.js';
 import type { PushDispatcher } from './dispatcher.js';
 
-interface ThresholdRow {
+export interface ThresholdRow {
   id: string;
   user_id: string;
   scope: 'provider_day' | 'provider_month' | 'claude_code_reset_window';
@@ -11,34 +11,19 @@ interface ThresholdRow {
   last_fired_at: Date | null;
 }
 
-interface UsageRow {
-  user_id: string;
+export interface AggregateRow {
+  account_id: string;
   provider: 'anthropic' | 'openai';
   unit: 'usd' | 'tokens' | 'requests';
   total: string;
+  daily_cap_usd: number | null;
+  monthly_cap_usd: number | null;
+  daily_cap_tokens: number | null;
+  reset_window_cap_tokens: number | null;
+  reset_window_seconds: number;
 }
 
-const RESET_BACKOFF_MS = 6 * 60 * 60 * 1000; // don't re-fire the same alert within 6 hours
-
-/**
- * Evaluates user-configured thresholds against the latest aggregate usage.
- * Fires a push for every threshold that has just crossed its trigger.
- *
- * The "limit" each threshold compares against is provider-defined; we use
- * `accounts.metadata.limit` if present, else fall back to a per-account
- * provided limit on the threshold row (future schema). For M6 we treat the
- * percent as a raw fraction of the *daily* or *monthly* aggregate divided by
- * a configured cap exposed via the `account_limits` view (TODO). To keep
- * this commit working without schema changes we evaluate the simpler check:
- * if the absolute daily total exceeds a hardcoded cap the user set when
- * creating the threshold (`percent` interpreted as fraction of $20/day for
- * USD, 1M tokens/day for tokens).
- */
-const FALLBACK_CAPS: Record<'usd' | 'tokens' | 'requests', number> = {
-  usd: 20,
-  tokens: 1_000_000,
-  requests: 1_000,
-};
+const RESET_BACKOFF_MS = 6 * 60 * 60 * 1000;
 
 export interface ThresholdEvaluatorDeps {
   sql: Sql;
@@ -55,49 +40,21 @@ export async function evaluateForUser(deps: ThresholdEvaluatorDeps, userId: stri
   `;
   if (thresholds.length === 0) return;
 
-  // Aggregate today's usage and this month's usage for this user.
-  const today = await sql<UsageRow[]>`
-    select a.user_id, a.provider, f.unit, sum(f.value)::text as total
-    from usage_facts f
-    join accounts a on a.id = f.account_id
-    where a.user_id = ${userId}
-      and a.removed_at is null
-      and f.bucket_start >= date_trunc('day', now() at time zone 'utc')
-    group by a.user_id, a.provider, f.unit
-  `;
-  const month = await sql<UsageRow[]>`
-    select a.user_id, a.provider, f.unit, sum(f.value)::text as total
-    from usage_facts f
-    join accounts a on a.id = f.account_id
-    where a.user_id = ${userId}
-      and a.removed_at is null
-      and f.bucket_start >= date_trunc('month', now() at time zone 'utc')
-    group by a.user_id, a.provider, f.unit
-  `;
+  const today = await aggregate(sql, userId, "date_trunc('day', now() at time zone 'utc')");
+  const month = await aggregate(sql, userId, "date_trunc('month', now() at time zone 'utc')");
+  const fiveHour = await aggregateAgent(sql, userId, 5 * 3600);
 
   const fired: { id: string; title: string; body: string }[] = [];
 
   for (const t of thresholds) {
     if (t.last_fired_at && Date.now() - t.last_fired_at.getTime() < RESET_BACKOFF_MS) continue;
 
-    const rows = t.scope === 'provider_month' ? month : today;
-    const matched = rows.filter((r) => !t.provider || r.provider === t.provider);
-    for (const r of matched) {
-      const cap = FALLBACK_CAPS[r.unit];
-      const used = Number(r.total);
-      const ratio = used / cap;
-      if (ratio < t.percent) continue;
-      fired.push({
-        id: t.id,
-        title: `${prettyProvider(r.provider)} ${prettyScope(t.scope)} at ${Math.round(ratio * 100)}%`,
-        body: `${formatUsed(r.unit, used)} of ~${formatUsed(r.unit, cap)} cap`,
-      });
-      break; // one fire per threshold per evaluation cycle
-    }
+    const cross = match(t, { today, month, fiveHour });
+    if (!cross) continue;
+    fired.push({ id: t.id, ...cross });
   }
 
   if (fired.length === 0) return;
-
   for (const f of fired) {
     await push.send(userId, {
       title: f.title,
@@ -108,6 +65,77 @@ export async function evaluateForUser(deps: ThresholdEvaluatorDeps, userId: stri
     await sql`update alert_thresholds set last_fired_at = now() where id = ${f.id}`;
   }
   deps.log?.('thresholds-fired', { userId, count: fired.length });
+}
+
+async function aggregate(sql: Sql, userId: string, sinceExpr: string): Promise<AggregateRow[]> {
+  return sql<AggregateRow[]>`
+    select
+      a.id as account_id, a.provider, f.unit, sum(f.value)::text as total,
+      a.daily_cap_usd, a.monthly_cap_usd, a.daily_cap_tokens,
+      a.reset_window_cap_tokens, a.reset_window_seconds
+    from usage_facts f
+    join accounts a on a.id = f.account_id
+    where a.user_id = ${userId}
+      and a.removed_at is null
+      and f.bucket_start >= ${sql.unsafe(sinceExpr)}
+    group by a.id, a.provider, f.unit
+  `;
+}
+
+async function aggregateAgent(sql: Sql, userId: string, windowSec: number): Promise<AggregateRow[]> {
+  return sql<AggregateRow[]>`
+    select
+      a.id as account_id, a.provider, 'tokens' as unit,
+      sum(s.input_tokens + s.output_tokens)::text as total,
+      a.daily_cap_usd, a.monthly_cap_usd, a.daily_cap_tokens,
+      a.reset_window_cap_tokens, a.reset_window_seconds
+    from agent_samples s
+    join accounts a on a.user_id = s.user_id and a.provider = 'anthropic'
+    where s.user_id = ${userId}
+      and s.source = 'claude_code'
+      and a.removed_at is null
+      and s.occurred_at >= now() - make_interval(secs => ${windowSec})
+    group by a.id, a.provider, a.daily_cap_usd, a.monthly_cap_usd,
+             a.daily_cap_tokens, a.reset_window_cap_tokens, a.reset_window_seconds
+  `;
+}
+
+interface Match { title: string; body: string }
+
+// exported for unit tests
+export const _testing = { match, capFor };
+
+function match(
+  t: ThresholdRow,
+  agg: { today: AggregateRow[]; month: AggregateRow[]; fiveHour: AggregateRow[] },
+): Match | null {
+  const rows =
+    t.scope === 'provider_month' ? agg.month :
+    t.scope === 'claude_code_reset_window' ? agg.fiveHour :
+    agg.today;
+
+  for (const r of rows) {
+    if (t.provider && r.provider !== t.provider) continue;
+    const cap = capFor(t.scope, r);
+    if (cap == null || cap <= 0) continue;
+    const used = Number(r.total);
+    const ratio = used / cap;
+    if (ratio < t.percent) continue;
+    return {
+      title: `${prettyProvider(r.provider)} ${prettyScope(t.scope)} at ${Math.round(ratio * 100)}%`,
+      body: `${formatUsed(r.unit, used)} of ${formatUsed(r.unit, cap)} cap`,
+    };
+  }
+  return null;
+}
+
+function capFor(scope: ThresholdRow['scope'], r: AggregateRow): number | null {
+  if (scope === 'claude_code_reset_window') return r.reset_window_cap_tokens;
+  if (scope === 'provider_month') return r.monthly_cap_usd;
+  // provider_day: prefer USD cap; fall back to token cap if the unit is tokens.
+  if (r.unit === 'usd') return r.daily_cap_usd;
+  if (r.unit === 'tokens') return r.daily_cap_tokens;
+  return null;
 }
 
 function prettyProvider(p: 'anthropic' | 'openai'): string {

@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile=false
+      - name: Typecheck
+        run: pnpm --filter @pulsewatch/backend typecheck
+      - name: Build
+        run: pnpm --filter @pulsewatch/backend build
+      - name: Unit tests
+        run: pnpm --filter @pulsewatch/backend test
+      - name: Integration tests (testcontainers)
+        run: pnpm --filter @pulsewatch/backend test:integration
+
+  agent-core:
+    name: Desktop agent core (Rust)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop-agent
+      - name: Cargo fmt
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy -p pulsewatch-agent-core --all-targets -- -D warnings
+      - name: Test
+        run: cargo test -p pulsewatch-agent-core
+
+  android:
+    name: Android (lint + assembleDebug)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Generate gradle wrapper
+        run: gradle wrapper --gradle-version 8.10
+      - name: Core unit tests
+        run: ./gradlew :core:test --no-daemon
+      # `:app` and `:wear` need the Android SDK; the basic compile is gated
+      # behind that. We compile :core unconditionally because it's a pure-JVM
+      # library and surfaces ApiClient / EnvelopeCipher type errors fast.
