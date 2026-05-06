@@ -1,6 +1,7 @@
 import WidgetKit
 import SwiftUI
 import PulseWatchModels
+import PulseWatchUI
 
 struct UsageComplication: Widget {
     let kind: String = "UsageComplication"
@@ -104,8 +105,21 @@ struct UsageComplicationView: View {
     }
 
     private var tint: Color {
-        guard let pct = entry.provider?.percent else { return .accentColor }
-        return pct > 0.9 ? .red : (pct > 0.75 ? .orange : .accentColor)
+        let providerColor: Color = entry.provider?.provider == .openai
+            ? Theme.Colors.codex : Theme.Colors.claude
+        guard let pct = entry.provider?.percent else { return providerColor }
+        return pct > 0.9 ? Color(hex: 0xE11D48)
+             : pct > 0.75 ? Theme.Colors.warn
+             : providerColor
+    }
+}
+
+private extension Color {
+    init(hex: UInt32) {
+        let r = Double((hex >> 16) & 0xFF) / 255
+        let g = Double((hex >>  8) & 0xFF) / 255
+        let b = Double( hex        & 0xFF) / 255
+        self.init(red: r, green: g, blue: b)
     }
 }
 

@@ -1,0 +1,2 @@
+# Run `bash tools/sync-fonts.sh` after `bash assets/fonts/download.sh`.
+# CI does this in the android build job; see docs/fonts.md.

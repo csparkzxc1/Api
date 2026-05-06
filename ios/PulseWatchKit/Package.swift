@@ -11,11 +11,12 @@ let package = Package(
     products: [
         .library(
             name: "PulseWatchKit",
-            targets: ["PulseWatchAPI", "PulseWatchVault", "PulseWatchModels", "PulseWatchSync"]
+            targets: ["PulseWatchAPI", "PulseWatchVault", "PulseWatchModels", "PulseWatchSync", "PulseWatchUI"]
         )
     ],
     targets: [
         .target(name: "PulseWatchModels"),
+        .target(name: "PulseWatchUI"),
         .target(
             name: "PulseWatchVault",
             dependencies: ["PulseWatchModels"]

@@ -95,17 +95,19 @@ private fun ProviderRow(p: ProviderSummary) {
         percent > 0.75 -> Color(0xFFF59E0B)
         else -> MaterialTheme.colors.primary
     }
+    val isClaude = p.provider == app.pulsewatch.core.api.Provider.ANTHROPIC
+    val brand = if (isClaude) Color(0xFFD97757) else Color(0xFF10A37F)
+    val ringColor = if (percent > 0.9) Color(0xFFE11D48) else if (percent > 0.75) Color(0xFFE8B54A) else brand
     Row(verticalAlignment = Alignment.CenterVertically) {
-        // simple ring
         androidx.compose.foundation.Canvas(modifier = Modifier.size(36.dp)) {
             val stroke = 4.dp.toPx()
             drawArc(
-                color = Color.DarkGray,
+                color = brand.copy(alpha = 0.16f),
                 startAngle = 0f, sweepAngle = 360f, useCenter = false,
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke),
             )
             drawArc(
-                color = color,
+                color = ringColor,
                 startAngle = -90f, sweepAngle = (360f * percent).toFloat(), useCenter = false,
                 style = androidx.compose.ui.graphics.drawscope.Stroke(
                     width = stroke,

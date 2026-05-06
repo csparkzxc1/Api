@@ -27,6 +27,8 @@ targets:
       - path: PulseWatch
     resources:
       - path: PulseWatch/Resources/Assets.xcassets
+      - path: ../assets/fonts
+        type: folder
     info:
       path: PulseWatch/Resources/Info.plist
       properties:
@@ -39,6 +41,18 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        UIAppFonts:
+          - InstrumentSerif-Regular.ttf
+          - InstrumentSerif-Italic.ttf
+          - JetBrainsMono-Light.ttf
+          - JetBrainsMono-Regular.ttf
+          - JetBrainsMono-Medium.ttf
+          - JetBrainsMono-SemiBold.ttf
+          - Geist-Light.ttf
+          - Geist-Regular.ttf
+          - Geist-Medium.ttf
+          - Geist-SemiBold.ttf
+          - Geist-Bold.ttf
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.pulsewatch.PulseWatch
@@ -59,6 +73,8 @@ targets:
       - path: PulseWatchWatch
     resources:
       - path: PulseWatchWatch/Resources/Assets.xcassets
+      - path: ../assets/fonts
+        type: folder
     info:
       path: PulseWatchWatch/Resources/Info.plist
     settings:

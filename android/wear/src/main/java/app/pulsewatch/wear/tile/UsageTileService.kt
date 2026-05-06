@@ -100,9 +100,10 @@ class UsageTileService : TileService() {
             app.pulsewatch.core.api.UsageUnit.REQUESTS -> "${used.toLong()} req"
         }
 
+    // Throttle palette mirrored from `docs/design-tokens.md`. Keep in sync.
     private fun rampColor(percent: Double): Int = when {
-        percent > 0.9 -> 0xFFE11D48.toInt()
-        percent > 0.75 -> 0xFFF59E0B.toInt()
-        else -> 0xFF12C86E.toInt()
+        percent > 0.90 -> 0xFFE11D48.toInt()           // critical red
+        percent > 0.75 -> 0xFFE8B54A.toInt()           // warn (Throttle warn)
+        else           -> 0xFFD97757.toInt()           // claude (default)
     }
 }
