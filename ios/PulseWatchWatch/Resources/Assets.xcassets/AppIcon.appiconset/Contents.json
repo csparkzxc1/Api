@@ -1,0 +1,19 @@
+{
+  "images" : [
+    { "idiom" : "watch", "role" : "notificationCenter",  "size" : "24x24",  "scale" : "2x", "subtype" : "38mm",  "filename" : "AppIcon-24@2x.png" },
+    { "idiom" : "watch", "role" : "notificationCenter",  "size" : "27.5x27.5","scale" : "2x", "subtype" : "42mm",  "filename" : "AppIcon-27.5@2x.png" },
+    { "idiom" : "watch", "role" : "companionSettings",   "size" : "29x29",  "scale" : "2x", "filename" : "AppIcon-29@2x.png" },
+    { "idiom" : "watch", "role" : "companionSettings",   "size" : "29x29",  "scale" : "3x", "filename" : "AppIcon-29@3x.png" },
+    { "idiom" : "watch", "role" : "notificationCenter",  "size" : "33x33",  "scale" : "2x", "subtype" : "45mm",  "filename" : "AppIcon-33@2x.png" },
+    { "idiom" : "watch", "role" : "appLauncher",         "size" : "40x40",  "scale" : "2x", "subtype" : "38mm",  "filename" : "AppIcon-40@2x.png" },
+    { "idiom" : "watch", "role" : "appLauncher",         "size" : "44x44",  "scale" : "2x", "subtype" : "40mm",  "filename" : "AppIcon-44@2x.png" },
+    { "idiom" : "watch", "role" : "appLauncher",         "size" : "50x50",  "scale" : "2x", "subtype" : "44mm",  "filename" : "AppIcon-50@2x.png" },
+    { "idiom" : "watch", "role" : "quickLook",           "size" : "86x86",  "scale" : "2x", "subtype" : "38mm",  "filename" : "AppIcon-86@2x.png" },
+    { "idiom" : "watch", "role" : "quickLook",           "size" : "98x98",  "scale" : "2x", "subtype" : "42mm",  "filename" : "AppIcon-98@2x.png" },
+    { "idiom" : "watch", "role" : "quickLook",           "size" : "108x108","scale" : "2x", "subtype" : "44mm",  "filename" : "AppIcon-108@2x.png" },
+    { "idiom" : "watch", "role" : "quickLook",           "size" : "117x117","scale" : "2x", "subtype" : "45mm",  "filename" : "AppIcon-117@2x.png" },
+    { "idiom" : "watch", "role" : "quickLook",           "size" : "129x129","scale" : "2x", "subtype" : "49mm",  "filename" : "AppIcon-129@2x.png" },
+    { "idiom" : "watch-marketing", "size" : "1024x1024", "scale" : "1x", "filename" : "AppIcon-1024.png" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 }
+}
