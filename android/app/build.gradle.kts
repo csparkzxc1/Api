@@ -48,4 +48,7 @@ dependencies {
     implementation(libs.compose.ui.tooling.preview)
 
     implementation(libs.wearable)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }

@@ -117,6 +117,20 @@ public final class APIClient: @unchecked Sendable {
         try await send("/v1/alerts/thresholds", method: "PUT", body: items)
     }
 
+    // MARK: push
+
+    public func putPushToken(_ input: PushTokenInput) async throws {
+        let _: EmptyResponse = try await send(
+            "/v1/devices/push-token", method: "PUT", body: input, expectEmpty: true
+        )
+    }
+
+    public func deletePushToken() async throws {
+        let _: EmptyResponse = try await send(
+            "/v1/devices/push-token", method: "DELETE", expectEmpty: true
+        )
+    }
+
     // MARK: low-level
 
     private struct EmptyResponse: Decodable {}

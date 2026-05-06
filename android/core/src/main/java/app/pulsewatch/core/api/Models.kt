@@ -126,6 +126,28 @@ data class AlertThresholdInput(
 )
 
 @Serializable
+enum class PushPlatform {
+    @SerialName("ios") IOS,
+    @SerialName("watchos") WATCHOS,
+    @SerialName("android") ANDROID,
+    @SerialName("wearos") WEAROS,
+}
+
+@Serializable
+enum class PushEnvironment {
+    @SerialName("sandbox") SANDBOX,
+    @SerialName("production") PRODUCTION,
+}
+
+@Serializable
+data class PushTokenInput(
+    val platform: PushPlatform,
+    val apns_token: String? = null,
+    val apns_environment: PushEnvironment? = null,
+    val fcm_token: String? = null,
+)
+
+@Serializable
 data class AlertThreshold(
     val id: String,
     val scope: AlertScope,

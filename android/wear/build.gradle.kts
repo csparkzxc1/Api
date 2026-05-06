@@ -54,4 +54,7 @@ dependencies {
     implementation(libs.wear.protolayout.expression)
     implementation(libs.wear.watchface.complication.data.source)
     implementation(libs.wearable)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 }

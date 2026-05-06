@@ -2,6 +2,7 @@ import pino from 'pino';
 import { loadConfig } from '../config.js';
 import { createSql } from '../db/client.js';
 import { createRedis } from '../cache/redis.js';
+import { buildPush } from '../push/index.js';
 import { startPoller } from './poller.js';
 
 async function main() {
@@ -9,11 +10,13 @@ async function main() {
   const log = pino({ level: cfg.logLevel, name: 'pulsewatch-worker' });
   const sql = createSql(cfg.databaseUrl);
   const redis = createRedis(cfg.redisUrl);
+  const push = buildPush(cfg, sql, (msg, extra) => log.info(extra ?? {}, msg));
 
   const { stop } = startPoller({
     cfg,
     sql,
     redis,
+    push: push.dispatcher,
     log: (msg, extra) => log.info(extra ?? {}, msg),
   });
 
@@ -22,6 +25,7 @@ async function main() {
   const shutdown = async (signal: string) => {
     log.info({ signal }, 'worker stopping');
     await stop();
+    push.close();
     await redis.quit();
     await sql.end();
     process.exit(0);

@@ -66,12 +66,14 @@ flowchart LR
 
 | ID | Scope                                               | Status |
 |----|-----------------------------------------------------|--------|
-| M1 | Backend scaffolding, polling workers, OpenAPI spec  | this PR |
-| M2 | iOS phone app: onboarding, key vault, dashboard     | pending |
-| M3 | watchOS complications + WatchConnectivity sync      | pending |
-| M4 | Android phone app + Wear OS tiles                   | pending |
-| M5 | Tauri desktop agent for local log streaming         | pending |
-| M6 | APNs/FCM push, threshold prediction, beta release   | pending |
+| M1 | Backend scaffolding, polling workers, OpenAPI spec  | done |
+| M2 | iOS phone app: onboarding, key vault, dashboard     | done |
+| M3 | watchOS complications + WatchConnectivity sync      | done |
+| M4 | Android phone app + Wear OS tiles                   | done |
+| M5 | Tauri desktop agent for local log streaming         | done |
+| M6 | APNs/FCM push, threshold evaluator, beta release    | done |
+
+Beta deployment guide: [docs/DEPLOY.md](./docs/DEPLOY.md).
 
 ## Security model
 

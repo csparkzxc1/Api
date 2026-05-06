@@ -17,6 +17,7 @@ wear-watchface-complication = "1.2.1"
 wearable = "18.2.0"
 security-crypto = "1.1.0-alpha06"
 bouncycastle = "1.78.1"
+firebase-bom = "33.5.1"
 junit = "4.13.2"
 
 [libraries]
@@ -50,6 +51,9 @@ wearable = { module = "com.google.android.gms:play-services-wearable", version.r
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "security-crypto" }
 
 bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 

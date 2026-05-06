@@ -30,6 +30,7 @@ tags:
   - name: accounts
   - name: usage
   - name: alerts
+  - name: push
   - name: agent
   - name: system
 paths:
@@ -246,6 +247,23 @@ paths:
               schema:
                 type: array
                 items: { $ref: '#/components/schemas/AlertThreshold' }
+
+  /v1/devices/push-token:
+    put:
+      tags: [push]
+      summary: Register or update the APNs / FCM token for the caller's device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PushTokenInput' }
+      responses:
+        '204': { description: Stored }
+    delete:
+      tags: [push]
+      summary: Forget the push token for the caller's device
+      responses:
+        '204': { description: Removed }
 
   /v1/agent/ingest:
     post:
@@ -473,6 +491,22 @@ components:
             id: { type: string, format: uuid }
             created_at: { type: string, format: date-time }
             last_fired_at: { type: string, format: date-time, nullable: true }
+
+    PushTokenInput:
+      type: object
+      required: [platform]
+      properties:
+        platform:
+          type: string
+          enum: [ios, watchos, android, wearos]
+        apns_token:
+          type: string
+          description: Hex-encoded APNs device token. Provide this and/or fcm_token.
+        apns_environment:
+          type: string
+          enum: [sandbox, production]
+        fcm_token:
+          type: string
 
     AgentIngest:
       type: object

@@ -101,6 +101,16 @@ export interface AlertThreshold extends AlertThresholdInput {
   last_fired_at: string | null;
 }
 
+export type PushPlatform = 'ios' | 'watchos' | 'android' | 'wearos';
+export type PushEnvironment = 'sandbox' | 'production';
+
+export interface PushTokenInput {
+  platform: PushPlatform;
+  apns_token?: string;
+  apns_environment?: PushEnvironment;
+  fcm_token?: string;
+}
+
 export interface AgentIngestSample {
   t: string;
   source: AgentSource;

@@ -5,6 +5,7 @@ import PulseWatchVault
 
 @main
 struct PulseWatchApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var state = AppState()
 
     init() {
@@ -15,9 +16,18 @@ struct PulseWatchApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(state)
-                .onChange(of: state.session?.token) { _, _ in
+                .task {
+                    PushRegistrar.shared.attach(state: state)
+                    if state.session != nil {
+                        PushRegistrar.shared.requestPermissionAndRegister()
+                    }
+                }
+                .onChange(of: state.session?.token) { _, newToken in
                     if let stored = state.session {
                         try? WatchSync.shared.sendSession(stored)
+                    }
+                    if newToken != nil {
+                        PushRegistrar.shared.requestPermissionAndRegister()
                     }
                 }
         }

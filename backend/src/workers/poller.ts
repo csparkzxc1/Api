@@ -9,6 +9,8 @@ import {
   fetchAnthropicMessageUsage,
 } from '../providers/anthropic.js';
 import { fetchOpenAICost, fetchOpenAIUsage } from '../providers/openai.js';
+import type { PushDispatcher } from '../push/dispatcher.js';
+import { evaluateForUser } from '../push/thresholds.js';
 
 interface AccountRow {
   id: string;
@@ -37,6 +39,7 @@ export interface PollerDeps {
   cfg: Config;
   sql: Sql;
   redis: Redis;
+  push: PushDispatcher;
   log: (msg: string, extra?: Record<string, unknown>) => void;
 }
 
@@ -139,6 +142,14 @@ async function pollOnce(job: Job<PollJob>, deps: PollerDeps) {
       where id = ${account.id}
     `;
     log('poll-ok', { accountId: account.id, count: facts.length });
+
+    if (facts.length > 0) {
+      try {
+        await evaluateForUser({ sql, push: deps.push, log }, account.user_id);
+      } catch (err) {
+        log('threshold-eval-failed', { userId: account.user_id, err: (err as Error).message });
+      }
+    }
   } catch (err) {
     await markError(sql, account.id, (err as Error).message.slice(0, 500));
     throw err;

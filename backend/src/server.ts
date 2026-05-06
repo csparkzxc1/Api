@@ -19,6 +19,7 @@ import { alertsRoutes } from './routes/alerts.js';
 import { agentRoutes } from './routes/agent.js';
 import { wrappingKeysRoutes } from './routes/wrapping_keys.js';
 import { pairingsRoutes } from './routes/pairings.js';
+import { pushTokensRoutes } from './routes/push_tokens.js';
 
 const VERSION = '0.1.0';
 
@@ -70,6 +71,7 @@ export async function buildServer() {
   await app.register(agentRoutes);
   await app.register(wrappingKeysRoutes);
   await app.register(pairingsRoutes);
+  await app.register(pushTokensRoutes);
 
   app.setErrorHandler((err, _req, reply) => {
     if ((err as { name?: string }).name === 'ZodError') {

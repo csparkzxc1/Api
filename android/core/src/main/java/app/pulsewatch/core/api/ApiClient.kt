@@ -76,6 +76,17 @@ class ApiClient(
     suspend fun putThresholds(items: List<AlertThresholdInput>): List<AlertThreshold> =
         put("/v1/alerts/thresholds", items)
 
+    // Push ------------------------------------------------------------------
+
+    suspend fun putPushToken(input: PushTokenInput) {
+        val payload = json.encodeToString(serializer<PushTokenInput>(), input)
+        execute("/v1/devices/push-token", "PUT", payload, authed = true).close()
+    }
+
+    suspend fun deletePushToken() {
+        empty("/v1/devices/push-token", "DELETE")
+    }
+
     // Internals -------------------------------------------------------------
 
     private suspend inline fun <reified Res> get(path: String): Res =

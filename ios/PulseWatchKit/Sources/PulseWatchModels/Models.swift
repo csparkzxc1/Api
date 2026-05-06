@@ -145,3 +145,23 @@ public struct DeviceEnrollRequest: Codable, Sendable {
         self.device_name = device_name
     }
 }
+
+public enum PushEnvironment: String, Codable, Sendable { case sandbox, production }
+public enum PushPlatform: String, Codable, Sendable { case ios, watchos, android, wearos }
+
+public struct PushTokenInput: Codable, Sendable {
+    public let platform: PushPlatform
+    public let apns_token: String?
+    public let apns_environment: PushEnvironment?
+    public let fcm_token: String?
+
+    public init(platform: PushPlatform,
+                apns_token: String? = nil,
+                apns_environment: PushEnvironment? = nil,
+                fcm_token: String? = nil) {
+        self.platform = platform
+        self.apns_token = apns_token
+        self.apns_environment = apns_environment
+        self.fcm_token = fcm_token
+    }
+}

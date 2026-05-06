@@ -26,6 +26,16 @@ const Schema = z.object({
   CORS_ORIGIN: z.string().default(''),
   WRAPPING_KID: z.string().min(1),
   WRAPPING_PRIVKEY: z.string().regex(/^[0-9a-fA-F]{64}$/),
+
+  // Push (all optional — without these the dispatcher is a no-op)
+  APNS_KEY_P8: z.string().optional(),
+  APNS_KEY_ID: z.string().regex(/^[A-Z0-9]{10}$/).optional(),
+  APNS_TEAM_ID: z.string().regex(/^[A-Z0-9]{10}$/).optional(),
+  APNS_TOPIC: z.string().optional(),
+  APNS_ENVIRONMENT: z.enum(['sandbox', 'production']).default('production'),
+  FCM_PROJECT_ID: z.string().optional(),
+  FCM_CLIENT_EMAIL: z.string().email().optional(),
+  FCM_PRIVATE_KEY: z.string().optional(),
 });
 
 export type Config = {
@@ -41,6 +51,14 @@ export type Config = {
   corsOrigin: string[];
   wrappingKid: string;
   wrappingKey: WrappingKeyPair;
+  apns?: {
+    keyP8: string;
+    keyId: string;
+    teamId: string;
+    topic: string;
+    environment: 'production' | 'sandbox';
+  };
+  fcm?: { projectId: string; clientEmail: string; privateKey: string };
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -62,5 +80,23 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     corsOrigin: parsed.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean),
     wrappingKid: parsed.WRAPPING_KID,
     wrappingKey: loadWrappingKeyFromHex(parsed.WRAPPING_PRIVKEY),
+    apns:
+      parsed.APNS_KEY_P8 && parsed.APNS_KEY_ID && parsed.APNS_TEAM_ID && parsed.APNS_TOPIC
+        ? {
+            keyP8: parsed.APNS_KEY_P8.replace(/\\n/g, '\n'),
+            keyId: parsed.APNS_KEY_ID,
+            teamId: parsed.APNS_TEAM_ID,
+            topic: parsed.APNS_TOPIC,
+            environment: parsed.APNS_ENVIRONMENT,
+          }
+        : undefined,
+    fcm:
+      parsed.FCM_PROJECT_ID && parsed.FCM_CLIENT_EMAIL && parsed.FCM_PRIVATE_KEY
+        ? {
+            projectId: parsed.FCM_PROJECT_ID,
+            clientEmail: parsed.FCM_CLIENT_EMAIL,
+            privateKey: parsed.FCM_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          }
+        : undefined,
   };
 }
