@@ -29,6 +29,12 @@ export interface Session {
   expires_at: string;
 }
 
+export interface WrappingKey {
+  kid: string;
+  public_key: string;
+  alg: 'X25519-HKDF-SHA256-AES256GCM';
+}
+
 export interface AccountCreate {
   provider: Provider;
   label: string;

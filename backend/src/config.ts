@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { loadWrappingKeyFromHex, type WrappingKeyPair } from './security/ecies.js';
 
 const KekKeyEntry = z.string().regex(/^[^:]+:[0-9a-fA-F]{64}$/);
 
@@ -23,6 +24,8 @@ const Schema = z.object({
   POLL_INTERVAL_SECONDS: z.coerce.number().int().positive().default(600),
   POLL_JITTER_SECONDS: z.coerce.number().int().nonnegative().default(60),
   CORS_ORIGIN: z.string().default(''),
+  WRAPPING_KID: z.string().min(1),
+  WRAPPING_PRIVKEY: z.string().regex(/^[0-9a-fA-F]{64}$/),
 });
 
 export type Config = {
@@ -36,6 +39,8 @@ export type Config = {
   pollIntervalSec: number;
   pollJitterSec: number;
   corsOrigin: string[];
+  wrappingKid: string;
+  wrappingKey: WrappingKeyPair;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -55,5 +60,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     pollIntervalSec: parsed.POLL_INTERVAL_SECONDS,
     pollJitterSec: parsed.POLL_JITTER_SECONDS,
     corsOrigin: parsed.CORS_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean),
+    wrappingKid: parsed.WRAPPING_KID,
+    wrappingKey: loadWrappingKeyFromHex(parsed.WRAPPING_PRIVKEY),
   };
 }

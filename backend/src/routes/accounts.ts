@@ -1,6 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type { Account } from '@pulsewatch/shared-types';
+import { decapsulate } from '../security/ecies.js';
+import { wrapDataKey } from '../security/crypto.js';
 
 const AccountCreate = z.object({
   provider: z.enum(['anthropic', 'openai']),
@@ -53,11 +55,30 @@ export async function accountsRoutes(app: FastifyInstance) {
     if (body.provider === 'openai' && !body.org_id) {
       return reply.code(400).send({ error: 'openai_org_id_required' });
     }
-    if (!app.cfg.kekKeys.has(body.kid)) {
-      return reply.code(400).send({ error: 'unknown_kid' });
+    if (body.kid !== app.cfg.wrappingKid) {
+      return reply.code(400).send({ error: 'unknown_wrapping_kid' });
     }
 
-    const wrapped = Buffer.from(body.wrapped_key, 'base64');
+    // Decapsulate the ECIES envelope from the phone, then immediately rewrap
+    // with the at-rest KEK. The plaintext lives only on this stack frame.
+    let plaintext: Buffer;
+    try {
+      plaintext = decapsulate(app.cfg.wrappingKey, Buffer.from(body.wrapped_key, 'base64'));
+    } catch (err) {
+      return reply.code(400).send({ error: 'unwrap_failed' });
+    }
+    if (plaintext.length < 8 || plaintext.length > 4096) {
+      plaintext.fill(0);
+      return reply.code(400).send({ error: 'invalid_provider_key' });
+    }
+
+    let stored: { kid: string; ciphertext: Buffer };
+    try {
+      stored = wrapDataKey(app.cfg, plaintext);
+    } finally {
+      plaintext.fill(0);
+    }
+
     const rows = await app.sql<AccountRow[]>`
       insert into accounts (user_id, provider, label, org_id, kid, wrapped_key)
       values (
@@ -65,8 +86,8 @@ export async function accountsRoutes(app: FastifyInstance) {
         ${body.provider},
         ${body.label},
         ${body.org_id ?? null},
-        ${body.kid},
-        ${wrapped}
+        ${stored.kid},
+        ${stored.ciphertext}
       )
       returning id, provider, label, org_id, status, error_message, last_polled_at, created_at
     `;

@@ -22,8 +22,9 @@ See `openapi.yaml` at the repo root — also served at `GET /openapi.yaml`.
 | GET    | `/healthz`                            | public |
 | POST   | `/v1/auth/devices`                    | enroll a device, returns bearer token |
 | DELETE | `/v1/auth/devices/:id`                | revoke |
+| GET    | `/v1/wrapping-keys/current`           | current ECIES public key for provider-key wrapping |
 | GET    | `/v1/accounts`                        | list provider accounts |
-| POST   | `/v1/accounts`                        | enroll provider account (envelope-encrypted key) |
+| POST   | `/v1/accounts`                        | enroll provider account (ECIES-wrapped key) |
 | GET    | `/v1/accounts/:id`                    | |
 | DELETE | `/v1/accounts/:id`                    | soft delete |
 | POST   | `/v1/accounts/:id/refresh`            | enqueue an immediate poll |
@@ -34,13 +35,20 @@ See `openapi.yaml` at the repo root — also served at `GET /openapi.yaml`.
 
 ## Encryption
 
-`KEK_KEYS` is a comma-separated list of `kid:hex32`. The current key is named
-by `KEK_KID`. Wrap/unwrap is AES-256-GCM with a fresh 96-bit IV per record. Key
-rotation is by appending the new entry to `KEK_KEYS` and updating `KEK_KID`;
-old ciphertext keeps unwrapping with the previous kid.
+Two distinct keys, two roles:
 
-In production, replace `wrapDataKey`/`unwrapDataKey` with calls to AWS KMS
-`Encrypt`/`Decrypt` so the master key never leaves the HSM.
+- **Wrapping key** (`WRAPPING_KID`/`WRAPPING_PRIVKEY`): X25519 keypair. The
+  phone fetches the public part from `/v1/wrapping-keys/current` and encrypts
+  the provider API key with `X25519-HKDF-SHA256-AES256GCM`. The plaintext
+  exists on the server only on the call stack of `POST /v1/accounts` —
+  decapsulated, re-wrapped under the KEK, and discarded with `Buffer.fill(0)`.
+- **At-rest KEK** (`KEK_KID`/`KEK_KEYS`): AES-256-GCM key (rotatable, kid'd).
+  Used by `wrapDataKey`/`unwrapDataKey` to encrypt provider keys in
+  `accounts.wrapped_key`. The polling worker is the only code path that
+  unwraps; the plaintext is zeroed immediately after the HTTP call.
+
+In production, replace both with KMS-managed keys so the master material
+never leaves the HSM.
 
 ## Polling
 

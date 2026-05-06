@@ -26,6 +26,7 @@ servers:
     description: Local dev
 tags:
   - name: auth
+  - name: wrapping-keys
   - name: accounts
   - name: usage
   - name: alerts
@@ -72,6 +73,23 @@ paths:
         - $ref: '#/components/parameters/DeviceId'
       responses:
         '204': { description: Revoked }
+
+  /v1/wrapping-keys/current:
+    get:
+      tags: [wrapping-keys]
+      summary: Current ECIES wrapping public key (X25519)
+      description: |
+        Returned to authenticated clients before they enroll a provider account.
+        The phone uses this key to wrap the provider API key with
+        `X25519-HKDF-SHA256-AES256GCM`. Wire format of the resulting
+        `wrapped_key` is `[32-byte ephemeral pubkey][12-byte iv][16-byte tag][ciphertext]`,
+        base64-encoded.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WrappingKey' }
 
   /v1/accounts:
     get:
@@ -286,6 +304,18 @@ components:
       type: string
       enum: [anthropic, openai]
 
+    WrappingKey:
+      type: object
+      required: [kid, public_key, alg]
+      properties:
+        kid: { type: string }
+        public_key:
+          type: string
+          description: Base64 raw 32-byte X25519 public key
+        alg:
+          type: string
+          enum: [X25519-HKDF-SHA256-AES256GCM]
+
     AccountCreate:
       type: object
       required: [provider, label, wrapped_key, kid]
@@ -294,10 +324,13 @@ components:
         label: { type: string, maxLength: 64 }
         wrapped_key:
           type: string
-          description: Base64 ciphertext of the provider API key (and admin key for Anthropic)
+          description: |
+            Base64 ECIES envelope of the provider API key. Layout:
+            `[32-byte ephemeral pubkey][12-byte iv][16-byte tag][ciphertext]`.
+            HKDF salt is the recipient public key, info is `pulsewatch v1`.
         kid:
           type: string
-          description: Wrapping-key identifier (rotation aware)
+          description: Must equal the kid returned by GET /v1/wrapping-keys/current
         org_id:
           type: string
           description: Required for OpenAI; ignored for Anthropic
