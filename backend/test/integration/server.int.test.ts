@@ -82,7 +82,7 @@ async function jsonReq(
   const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers: {
-      'content-type': 'application/json',
+      ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
