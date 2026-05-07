@@ -51,7 +51,7 @@ beforeAll(async () => {
   process.env.KEK_KEYS = `k1:${'00'.repeat(32)}`;
   process.env.WRAPPING_KID = 'w1';
   process.env.WRAPPING_PRIVKEY = wrap.privHex;
-  process.env.PORT = '0';
+  process.env.PORT = '8080';
 
   // Apply migrations.
   const sql = postgres(process.env.DATABASE_URL!);
