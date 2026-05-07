@@ -21,6 +21,7 @@ object EnvelopeCipher {
     private const val PUB_LEN = 32
     private const val IV_LEN = 12
     private const val TAG_LEN = 16
+    private const val SHARED_LEN = 32
     private val INFO = "cap v1".toByteArray(Charsets.UTF_8)
     private val secureRandom = SecureRandom()
 
@@ -31,7 +32,7 @@ object EnvelopeCipher {
         val ephPriv = X25519PrivateKeyParameters(secureRandom)
         val ephPubBytes = ByteArray(PUB_LEN).also { ephPriv.generatePublicKey().encode(it, 0) }
 
-        val shared = ByteArray(X25519Agreement.SECRET_SIZE)
+        val shared = ByteArray(SHARED_LEN)
         X25519Agreement().apply { init(ephPriv) }
             .calculateAgreement(X25519PublicKeyParameters(recipientRawPublicKey, 0), shared, 0)
 
@@ -64,7 +65,7 @@ object EnvelopeCipher {
 
         val priv = X25519PrivateKeyParameters(recipientPrivateKey, 0)
         val recipientPubBytes = ByteArray(PUB_LEN).also { priv.generatePublicKey().encode(it, 0) }
-        val shared = ByteArray(X25519Agreement.SECRET_SIZE)
+        val shared = ByteArray(SHARED_LEN)
         X25519Agreement().apply { init(priv) }
             .calculateAgreement(X25519PublicKeyParameters(ephPub, 0), shared, 0)
         val key = hkdfSha256(shared, salt = recipientPubBytes, info = INFO, length = 32)

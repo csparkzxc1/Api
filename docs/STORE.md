@@ -246,7 +246,7 @@ iPhone 6.9" + Apple Watch screenshots:
 >
 > Privacy: cap.app/privacy
 > Support: support@cap.app
-> Open-source: github.com/csparkzxc1/Api
+> Open-source: github.com/csparkzxc1/cap
 
 ---
 
@@ -298,7 +298,7 @@ iPhone 6.9" + Apple Watch screenshots:
 >
 > 개인정보: cap.app/privacy
 > 지원: support@cap.app
-> 오픈소스: github.com/csparkzxc1/Api
+> 오픈소스: github.com/csparkzxc1/cap
 
 ---
 
