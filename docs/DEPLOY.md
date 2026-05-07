@@ -1,4 +1,4 @@
-# PulseWatch deployment
+# Cap deployment
 
 This walks the maintainer through getting M6 to a private beta. Skim the
 README first; this doc only covers what's specific to going live.
@@ -34,33 +34,33 @@ README first; this doc only covers what's specific to going live.
      APNS_KEY_P8="$(cat AuthKey_ABCDE12345.p8)" \
      APNS_KEY_ID=ABCDE12345 \
      APNS_TEAM_ID=ABCDEFGHIJ \
-     APNS_TOPIC=app.pulsewatch.PulseWatch \
+     APNS_TOPIC=app.cap.Cap \
      APNS_ENVIRONMENT=production
    fly secrets set \
-     FCM_PROJECT_ID=pulsewatch-prod \
-     FCM_CLIENT_EMAIL=fcm-sender@pulsewatch-prod.iam.gserviceaccount.com \
+     FCM_PROJECT_ID=cap-prod \
+     FCM_CLIENT_EMAIL=fcm-sender@cap-prod.iam.gserviceaccount.com \
      FCM_PRIVATE_KEY="$(cat fcm-key.pem)"
    ```
 
 4. **Deploy**: from `backend/`, `fly deploy`. The `fly.toml` ships two
    processes (`app` and `worker`), so polling and push fire-out happen on
    the worker machine while the API process serves requests.
-5. **Migrate**: `fly ssh console -a pulsewatch-api -C "node dist/db/migrate.js"`.
+5. **Migrate**: `fly ssh console -a cap-api -C "node dist/db/migrate.js"`.
 
 ## iOS (TestFlight)
 
-1. In the Apple Developer portal, register `app.pulsewatch.PulseWatch` and
-   the watch app id `app.pulsewatch.PulseWatch.watchkitapp`. Enable the
+1. In the Apple Developer portal, register `app.cap.Cap` and
+   the watch app id `app.cap.Cap.watchkitapp`. Enable the
    *Push Notifications* capability for both.
 2. Create an APNs auth key (`AuthKey_*.p8`); copy the Key ID and Team ID
    into the Fly secrets above.
 3. From `ios/`, run `xcodegen generate` to materialise the
-   `PulseWatch.xcodeproj`, then archive in Xcode and push to App Store
+   `Cap.xcodeproj`, then archive in Xcode and push to App Store
    Connect → TestFlight Internal Testing. Add internal testers via email.
 
 ## Android phone (Play Console internal testing)
 
-1. Create the Firebase project `pulsewatch-prod`. Enable Cloud Messaging.
+1. Create the Firebase project `cap-prod`. Enable Cloud Messaging.
    Download `google-services.json` and drop it into `android/app/`.
 2. Create the Wear OS Firebase app under the same project. Drop its
    `google-services.json` into `android/wear/`.

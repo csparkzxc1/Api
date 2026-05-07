@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    pulsewatch_agent_lib::run();
+    cap_agent_lib::run();
 }

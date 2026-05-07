@@ -1,5 +1,5 @@
 {
-  "name": "@pulsewatch/backend",
+  "name": "@cap-app/backend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -20,7 +20,7 @@
     "@fastify/helmet": "^12.0.1",
     "@fastify/rate-limit": "^10.1.1",
     "@fastify/sensible": "^6.0.1",
-    "@pulsewatch/shared-types": "workspace:*",
+    "@cap-app/shared-types": "workspace:*",
     "bullmq": "^5.20.1",
     "fastify": "^5.1.0",
     "fastify-plugin": "^5.0.1",

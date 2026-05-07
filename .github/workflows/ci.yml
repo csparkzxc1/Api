@@ -39,13 +39,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile=false
       - name: Typecheck
-        run: pnpm --filter @pulsewatch/backend typecheck
+        run: pnpm --filter @cap-app/backend typecheck
       - name: Build
-        run: pnpm --filter @pulsewatch/backend build
+        run: pnpm --filter @cap-app/backend build
       - name: Unit tests
-        run: pnpm --filter @pulsewatch/backend test
+        run: pnpm --filter @cap-app/backend test
       - name: Integration tests (testcontainers)
-        run: pnpm --filter @pulsewatch/backend test:integration
+        run: pnpm --filter @cap-app/backend test:integration
 
   agent-core:
     name: Desktop agent core (Rust)
@@ -62,9 +62,9 @@ jobs:
       - name: Cargo fmt
         run: cargo fmt --all -- --check
       - name: Clippy
-        run: cargo clippy -p pulsewatch-agent-core --all-targets -- -D warnings
+        run: cargo clippy -p cap-agent-core --all-targets -- -D warnings
       - name: Test
-        run: cargo test -p pulsewatch-agent-core
+        run: cargo test -p cap-agent-core
 
   android:
     name: Android (lint + assembleDebug)

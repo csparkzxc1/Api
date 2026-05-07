@@ -24,7 +24,7 @@ fg_src="$repo/assets/icon/icon-foreground.svg"
 tray_src="$repo/assets/icon/tray-icon.svg"
 
 # ---------- iOS phone ------------------------------------------------------
-ios_set="$repo/ios/PulseWatch/Resources/Assets.xcassets/AppIcon.appiconset"
+ios_set="$repo/ios/Cap/Resources/Assets.xcassets/AppIcon.appiconset"
 mkdir -p "$ios_set"
 render 1024 "$ios_set/AppIcon-1024.png"
 render  120 "$ios_set/AppIcon-60@2x.png"
@@ -37,7 +37,7 @@ render   40 "$ios_set/AppIcon-20@2x.png"
 render   60 "$ios_set/AppIcon-20@3x.png"
 
 # ---------- watchOS --------------------------------------------------------
-watch_set="$repo/ios/PulseWatchWatch/Resources/Assets.xcassets/AppIcon.appiconset"
+watch_set="$repo/ios/CapWatch/Resources/Assets.xcassets/AppIcon.appiconset"
 mkdir -p "$watch_set"
 render 1024 "$watch_set/AppIcon-1024.png"
 render   48 "$watch_set/AppIcon-24@2x.png"

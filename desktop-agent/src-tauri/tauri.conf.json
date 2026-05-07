@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "PulseWatch Agent",
+  "productName": "Cap Agent",
   "version": "0.1.0",
-  "identifier": "app.pulsewatch.agent",
+  "identifier": "app.cap.agent",
   "build": {
     "frontendDist": "../frontend",
     "devUrl": "http://localhost:5173"
@@ -12,7 +12,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "PulseWatch Agent",
+        "title": "Cap Agent",
         "width": 480,
         "height": 540,
         "resizable": false,
@@ -22,11 +22,11 @@
       }
     ],
     "trayIcon": {
-      "id": "pulsewatch-tray",
+      "id": "cap-tray",
       "iconPath": "icons/tray-icon.png",
       "iconAsTemplate": true,
       "menuOnLeftClick": true,
-      "tooltip": "PulseWatch"
+      "tooltip": "Cap"
     },
     "security": {
       "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ipc:"
@@ -45,7 +45,7 @@
     ],
     "category": "DeveloperTool",
     "shortDescription": "AI usage monitor agent",
-    "longDescription": "Streams local Claude Code and Codex CLI usage counters to your PulseWatch backend so the watch app stays accurate. Never reads prompt or completion content."
+    "longDescription": "Streams local Claude Code and Codex CLI usage counters to your Cap backend so the watch app stays accurate. Never reads prompt or completion content."
   },
   "plugins": {}
 }

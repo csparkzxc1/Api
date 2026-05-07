@@ -6,8 +6,8 @@
 //! - the watcher resumes from the persisted offset on restart instead of
 //!   re-emitting the whole file
 
-use pulsewatch_agent_core::config::{load_state, save_state, WatcherState};
-use pulsewatch_agent_core::watcher::start;
+use cap_agent_core::config::{load_state, save_state, WatcherState};
+use cap_agent_core::watcher::start;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::io::AsyncWriteExt;

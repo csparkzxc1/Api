@@ -1,7 +1,7 @@
-# PulseWatch Desktop Agent
+# Cap Desktop Agent
 
 Tauri 2 (Rust + minimal HTML/JS) menu-bar app that streams local Claude Code
-and Codex CLI usage counters to the PulseWatch backend so the watch app can
+and Codex CLI usage counters to the Cap backend so the watch app can
 show the 5-hour Claude Code Max window — a metric no public API exposes.
 
 ## Layout
@@ -93,8 +93,8 @@ Override with comma-separated paths via env vars (separator is `;` on
 Windows, `:` elsewhere):
 
 ```bash
-PULSEWATCH_CLAUDE_ROOT="/Users/me/.claude/projects:/Users/me/work/.claude/projects"
-PULSEWATCH_CODEX_ROOT="/Users/me/.codex/sessions"
+CAP_CLAUDE_ROOT="/Users/me/.claude/projects:/Users/me/work/.claude/projects"
+CAP_CODEX_ROOT="/Users/me/.codex/sessions"
 ```
 
 ### Windows + WSL
@@ -112,7 +112,7 @@ strategies:
    over `\\wsl.localhost\` than against a local NTFS path; if you see
    missed events use option 1 instead.
 
-`PULSEWATCH_CLAUDE_ROOT` overrides both behaviours, so power users can
+`CAP_CLAUDE_ROOT` overrides both behaviours, so power users can
 explicitly target the right path.
 
 ## How it works

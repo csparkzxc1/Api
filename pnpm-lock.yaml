@@ -17,6 +17,9 @@ importers:
 
   backend:
     dependencies:
+      '@cap-app/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
@@ -29,9 +32,6 @@ importers:
       '@fastify/sensible':
         specifier: ^6.0.1
         version: 6.0.4
-      '@pulsewatch/shared-types':
-        specifier: workspace:*
-        version: link:../shared-types
       bullmq:
         specifier: ^5.20.1
         version: 5.76.6

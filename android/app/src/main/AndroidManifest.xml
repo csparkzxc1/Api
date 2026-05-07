@@ -5,9 +5,9 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name=".PulseWatchApp"
+        android:name=".CapApp"
         android:label="@string/app_name"
-        android:theme="@style/Theme.PulseWatch"
+        android:theme="@style/Theme.Cap"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false">
@@ -26,7 +26,7 @@
             android:value="false" />
 
         <service
-            android:name=".push.PulseWatchMessagingService"
+            android:name=".push.CapMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />

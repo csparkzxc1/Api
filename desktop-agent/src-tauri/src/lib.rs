@@ -3,7 +3,7 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager};
 
-use pulsewatch_agent_core as core;
+use cap_agent_core as core;
 
 pub mod commands;
 
@@ -11,7 +11,7 @@ pub fn run() {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                tracing_subscriber::EnvFilter::new("info,pulsewatch_agent=debug")
+                tracing_subscriber::EnvFilter::new("info,cap_agent=debug")
             }),
         )
         .compact()
@@ -39,17 +39,17 @@ pub fn run() {
             }
         })
         .run(tauri::generate_context!())
-        .expect("error while running pulsewatch-agent");
+        .expect("error while running cap-agent");
 }
 
 fn install_tray(app: &AppHandle) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "Open PulseWatch Agent", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", "Open Cap Agent", true, None::<&str>)?;
     let pause = MenuItem::with_id(app, "pause", "Pause uploads", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &pause, &sep, &quit])?;
 
-    let _ = TrayIconBuilder::with_id("pulsewatch-tray")
+    let _ = TrayIconBuilder::with_id("cap-tray")
         .menu(&menu)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "open" => {

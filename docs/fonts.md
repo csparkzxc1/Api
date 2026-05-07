@@ -36,11 +36,11 @@ TTFs, and renames them to match the table above.
 ## Per-platform wiring
 
 ### iOS / watchOS
-- `ios/PulseWatch/Resources/Info.plist` declares each filename under
+- `ios/Cap/Resources/Info.plist` declares each filename under
   `UIAppFonts`.
 - `ios/project.yml` adds `assets/fonts/` to the resource bundle for both
   the phone and watch targets.
-- Loaded via `PulseWatchUI.Theme.serif(...)` / `mono(...)` / `body(...)`.
+- Loaded via `CapUI.Theme.serif(...)` / `mono(...)` / `body(...)`.
 
 ### Android / Wear OS
 - Each TTF is copied to `app/src/main/res/font/` (lowercase, underscores)

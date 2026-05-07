@@ -1,23 +1,23 @@
 [package]
-name = "pulsewatch-agent"
+name = "cap-agent"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "PulseWatch desktop agent — ships local Claude Code / Codex usage counters to the backend"
+description = "Cap desktop agent — ships local Claude Code / Codex usage counters to the backend"
 
 [lib]
-name = "pulsewatch_agent_lib"
+name = "cap_agent_lib"
 path = "src/lib.rs"
 
 [[bin]]
-name = "pulsewatch-agent"
+name = "cap-agent"
 path = "src/main.rs"
 
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
 
 [dependencies]
-pulsewatch-agent-core = { path = "../agent-core" }
+cap-agent-core = { path = "../agent-core" }
 
 tauri = { version = "2.0", features = ["tray-icon"] }
 tauri-plugin-shell = "2.0"

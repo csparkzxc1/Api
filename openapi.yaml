@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
-  title: PulseWatch API
+  title: Cap API
   version: 0.1.0
-  summary: Backend API for the PulseWatch AI usage monitor.
+  summary: Backend API for the Cap AI usage monitor.
   description: |
-    The PulseWatch backend aggregates usage and cost data from the Anthropic
+    The Cap backend aggregates usage and cost data from the Anthropic
     Admin API and the OpenAI Usage API on behalf of authenticated users, and
     exposes it to the phone and watch apps through a small REST surface.
 
@@ -21,7 +21,7 @@ info:
     `kid` identifying the wrapping key version. The backend never sees
     plaintext provider keys.
 servers:
-  - url: https://api.pulsewatch.app
+  - url: https://api.cap.app
   - url: http://localhost:8080
     description: Local dev
 tags:
@@ -394,7 +394,7 @@ components:
           description: |
             Base64 ECIES envelope of the provider API key. Layout:
             `[32-byte ephemeral pubkey][12-byte iv][16-byte tag][ciphertext]`.
-            HKDF salt is the recipient public key, info is `pulsewatch v1`.
+            HKDF salt is the recipient public key, info is `cap v1`.
         kid:
           type: string
           description: Must equal the kid returned by GET /v1/wrapping-keys/current

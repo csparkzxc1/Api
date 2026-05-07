@@ -37,9 +37,9 @@ const wrap = generateWrappingKey();
 
 beforeAll(async () => {
   pg = await new PostgreSqlContainer('postgres:16-alpine')
-    .withDatabase('pulsewatch_test')
-    .withUsername('pulsewatch')
-    .withPassword('pulsewatch')
+    .withDatabase('cap_test')
+    .withUsername('cap')
+    .withPassword('cap')
     .start();
   redis = await new RedisContainer('redis:7-alpine').start();
 

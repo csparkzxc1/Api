@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "app.pulsewatch.core"
+    namespace = "app.cap.core"
     compileSdk = 34
 
     defaultConfig {

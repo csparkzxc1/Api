@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "app.pulsewatch"
+    namespace = "app.cap"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "app.pulsewatch"
+        applicationId = "app.cap"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

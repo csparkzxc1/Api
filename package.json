@@ -1,5 +1,5 @@
 {
-  "name": "pulsewatch",
+  "name": "cap",
   "private": true,
   "version": "0.1.0",
   "description": "AI API usage monitor for Apple Watch and Wear OS",

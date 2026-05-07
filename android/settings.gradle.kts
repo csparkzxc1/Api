@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "PulseWatch"
+rootProject.name = "Cap"
 include(":core", ":app", ":wear")

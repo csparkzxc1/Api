@@ -2612,13 +2612,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "pulsewatch-agent"
+name = "cap-agent"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
  "dirs 5.0.1",
- "pulsewatch-agent-core",
+ "cap-agent-core",
  "serde",
  "serde_json",
  "tauri",
@@ -2630,7 +2630,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pulsewatch-agent-core"
+name = "cap-agent-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",

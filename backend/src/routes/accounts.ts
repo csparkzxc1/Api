@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { Account } from '@pulsewatch/shared-types';
+import type { Account } from '@cap-app/shared-types';
 import { decapsulate } from '../security/ecies.js';
 import { wrapDataKey } from '../security/crypto.js';
 
