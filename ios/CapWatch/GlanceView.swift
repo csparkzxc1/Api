@@ -18,7 +18,7 @@ struct GlanceView: View {
 
     private var header: some View {
         HStack {
-            Text("Throttle")
+            Text("Cap")
                 .font(Theme.font(.serifBody))
                 .italic()
                 .foregroundStyle(Theme.Colors.claude)

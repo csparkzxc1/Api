@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Throttle design tokens. Mirrors `docs/design-tokens.md` 1:1; any change
+/// Cap design tokens. Mirrors `docs/design-tokens.md` 1:1; any change
 /// here must land there too. Use `Theme.Colors.*` and `Theme.font(.x)` from
 /// every SwiftUI surface — no raw hex / system fonts in feature code.
 public enum Theme {

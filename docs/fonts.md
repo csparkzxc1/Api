@@ -1,6 +1,6 @@
 # Fonts
 
-Throttle ships three font families. They live in `assets/fonts/` and get
+Cap ships three font families. They live in `assets/fonts/` and get
 copied into each app target by the build configs.
 
 ## Files (drop into `assets/fonts/`)

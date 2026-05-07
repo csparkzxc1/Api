@@ -2,7 +2,7 @@
 
 A horizontal slider — the orange-filled portion is the "used" share, the
 white knob with the Claude-orange dot marks the current position. The
-icon is literal to the app name (Throttle) and to the metric the app
+icon is literal to the app name (Cap) and to the metric the app
 exists to surface (your AI quota slider).
 
 ## Sources

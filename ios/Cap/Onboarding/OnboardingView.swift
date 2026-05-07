@@ -14,14 +14,14 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 28) {
                 HStack(spacing: 12) {
                     BrandDot(.claude, size: 6)
-                    Text("THROTTLE · v0.1")
+                    Text("CAP · v0.1")
                         .font(Theme.font(.monoXS))
                         .tracking(Theme.Tracking.labelCaps)
                         .foregroundStyle(Theme.Colors.textDim)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Throttle.")
+                    Text("Cap.")
                         .font(Theme.font(.displayLG))
                         .italic()
                         .foregroundStyle(Theme.Colors.text)

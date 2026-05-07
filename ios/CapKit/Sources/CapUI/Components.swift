@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - HaloCard ---------------------------------------------------------
 
-/// Throttle's signature card: panel surface, hairline border, top-right
+/// Cap's signature card: panel surface, hairline border, top-right
 /// radial halo in the brand accent. Use the `accent` parameter to switch
 /// between Claude / Codex / warn.
 public struct HaloCard<Content: View>: View {
