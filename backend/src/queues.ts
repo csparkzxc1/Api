@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq';
 import type { Redis } from 'ioredis';
 
-export const QUEUE_POLL = 'cap:poll';
+export const QUEUE_POLL = 'cap-poll';
 
 export type PollJob = {
   accountId: string;
