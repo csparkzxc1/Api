@@ -1,4 +1,4 @@
-# PulseWatch Backend
+# Cap Backend
 
 Fastify + TypeScript, PostgreSQL, Redis, BullMQ.
 
@@ -8,9 +8,9 @@ Fastify + TypeScript, PostgreSQL, Redis, BullMQ.
 cp .env.example .env
 docker compose up -d postgres redis  # from repo root
 pnpm install                          # from repo root
-pnpm --filter @pulsewatch/backend migrate
-pnpm --filter @pulsewatch/backend dev          # API on :8080
-pnpm --filter @pulsewatch/backend worker       # poll workers (separate terminal)
+pnpm --filter @cap-app/backend migrate
+pnpm --filter @cap-app/backend dev          # API on :8080
+pnpm --filter @cap-app/backend worker       # poll workers (separate terminal)
 ```
 
 ## Routes

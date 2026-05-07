@@ -1,9 +1,9 @@
 [package]
-name = "pulsewatch-agent-core"
+name = "cap-agent-core"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "Pure-Rust core for the PulseWatch desktop agent — parsers, watcher, uploader, vault. No Tauri."
+description = "Pure-Rust core for the Cap desktop agent — parsers, watcher, uploader, vault. No Tauri."
 
 [dev-dependencies]
 tempfile = "3"

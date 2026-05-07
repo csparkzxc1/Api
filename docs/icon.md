@@ -2,7 +2,7 @@
 
 A horizontal slider — the orange-filled portion is the "used" share, the
 white knob with the Claude-orange dot marks the current position. The
-icon is literal to the app name (Throttle) and to the metric the app
+icon is literal to the app name (Cap) and to the metric the app
 exists to surface (your AI quota slider).
 
 ## Sources
@@ -30,8 +30,8 @@ after a run shows exactly what each platform receives:
 
 | target              | files                                                                |
 |---------------------|----------------------------------------------------------------------|
-| iOS app             | `ios/PulseWatch/Resources/Assets.xcassets/AppIcon.appiconset/*.png`  |
-| watchOS app         | `ios/PulseWatchWatch/Resources/Assets.xcassets/AppIcon.appiconset/*` |
+| iOS app             | `ios/Cap/Resources/Assets.xcassets/AppIcon.appiconset/*.png`  |
+| watchOS app         | `ios/CapWatch/Resources/Assets.xcassets/AppIcon.appiconset/*` |
 | Android phone       | `android/app/src/main/res/mipmap-*/ic_launcher*.png` + adaptive XML  |
 | Wear OS             | `android/wear/src/main/res/mipmap-*/ic_launcher*.png` + adaptive XML |
 | Tauri agent         | `desktop-agent/src-tauri/icons/{32,128,128@2x,icon}.png + .ico/.icns + Square*Logo + StoreLogo` |

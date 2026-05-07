@@ -1,4 +1,4 @@
-# PulseWatch iOS / watchOS
+# Cap iOS / watchOS
 
 SwiftUI phone app with a paired watchOS target.
 
@@ -7,31 +7,31 @@ SwiftUI phone app with a paired watchOS target.
 ```
 ios/
 ├── project.yml                      # XcodeGen manifest
-├── PulseWatch/                      # iOS phone app target
-│   ├── PulseWatchApp.swift
+├── Cap/                      # iOS phone app target
+│   ├── CapApp.swift
 │   ├── AppState.swift
 │   ├── Onboarding/
 │   ├── Dashboard/
 │   ├── Accounts/
 │   ├── Settings/                    # incl. PairWatchView
 │   └── Resources/
-├── PulseWatchWatch/                 # watchOS app target
-│   ├── PulseWatchWatchApp.swift
+├── CapWatch/                 # watchOS app target
+│   ├── CapWatchApp.swift
 │   ├── WatchAppState.swift
 │   ├── GlanceView.swift
 │   └── Resources/
-├── PulseWatchComplications/         # watchOS WidgetKit extension
-│   ├── PulseWatchComplications.swift  # WidgetBundle
+├── CapComplications/         # watchOS WidgetKit extension
+│   ├── CapComplications.swift  # WidgetBundle
 │   ├── UsageProvider.swift            # TimelineProvider
 │   ├── UsageComplication.swift        # 4 supported families
 │   └── Resources/
-└── PulseWatchKit/                   # Swift Package
+└── CapKit/                   # Swift Package
     ├── Package.swift
     └── Sources/
-        ├── PulseWatchModels/        # Codable DTOs mirroring openapi.yaml
-        ├── PulseWatchVault/         # Keychain, EnvelopeCipher, SessionStore
-        ├── PulseWatchSync/          # WatchConnectivity helper
-        └── PulseWatchAPI/           # APIClient + EnrollmentFlow
+        ├── CapModels/        # Codable DTOs mirroring openapi.yaml
+        ├── CapVault/         # Keychain, EnvelopeCipher, SessionStore
+        ├── CapSync/          # WatchConnectivity helper
+        └── CapAPI/           # APIClient + EnrollmentFlow
 ```
 
 ## Generate the Xcode project
@@ -39,11 +39,11 @@ ios/
 ```bash
 brew install xcodegen
 cd ios && xcodegen generate
-open PulseWatch.xcodeproj
+open Cap.xcodeproj
 ```
 
-`PulseWatchKit` is a local Swift Package consumed by the app target; you can
-also run its tests with `swift test --package-path ios/PulseWatchKit`.
+`CapKit` is a local Swift Package consumed by the app target; you can
+also run its tests with `swift test --package-path ios/CapKit`.
 
 ## Provider-key encryption
 
@@ -76,7 +76,7 @@ Until the watch enrolls itself, the phone may also forward its own session via
 
 ## Complications
 
-`PulseWatchComplications` is a WidgetKit extension that ships:
+`CapComplications` is a WidgetKit extension that ships:
 - `accessoryCorner`, `accessoryCircular`, `accessoryRectangular`,
   `accessoryInline`.
 - `UsageProvider` reads the shared `SessionStore` from the keychain and calls

@@ -26,11 +26,11 @@ pub struct Paths {
 impl Paths {
     pub fn discover() -> Self {
         let local = dirs::data_local_dir().unwrap_or_else(std::env::temp_dir);
-        let state_file = local.join("pulsewatch-agent").join("state.json");
+        let state_file = local.join("cap-agent").join("state.json");
         Self {
             state_file,
-            claude_roots: discover_roots("PULSEWATCH_CLAUDE_ROOT", ".claude/projects"),
-            codex_roots: discover_roots("PULSEWATCH_CODEX_ROOT", ".codex/sessions"),
+            claude_roots: discover_roots("CAP_CLAUDE_ROOT", ".claude/projects"),
+            codex_roots: discover_roots("CAP_CODEX_ROOT", ".codex/sessions"),
         }
     }
 }

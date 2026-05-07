@@ -13,7 +13,7 @@ COPY --from=deps /app /app
 COPY shared-types ./shared-types
 COPY backend ./backend
 COPY openapi.yaml ./openapi.yaml
-RUN pnpm --filter @pulsewatch/backend build
+RUN pnpm --filter @cap-app/backend build
 
 FROM node:22-alpine AS runtime
 WORKDIR /app

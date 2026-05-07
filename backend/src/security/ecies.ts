@@ -10,11 +10,11 @@ import {
   type KeyObject,
 } from 'node:crypto';
 
-// Wire format (matches PulseWatchKit/EnvelopeCipher.swift):
+// Wire format (matches CapKit/EnvelopeCipher.swift):
 //   [32-byte ephemeral X25519 pubkey][12-byte iv][16-byte tag][ciphertext]
 //
-// HKDF salt is the wrapping pubkey, info is the constant "pulsewatch v1".
-const HKDF_INFO = Buffer.from('pulsewatch v1');
+// HKDF salt is the wrapping pubkey, info is the constant "cap v1".
+const HKDF_INFO = Buffer.from('cap v1');
 const KEY_LEN = 32;
 const IV_LEN = 12;
 const TAG_LEN = 16;

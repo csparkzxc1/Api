@@ -1,7 +1,7 @@
 //! Tauri IPC commands invoked from the onboarding webview.
 
-use pulsewatch_agent_core::api::{ApiClient, EnrollRequest};
-use pulsewatch_agent_core::vault::{StoredSession, Vault};
+use cap_agent_core::api::{ApiClient, EnrollRequest};
+use cap_agent_core::vault::{StoredSession, Vault};
 use serde::Serialize;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};

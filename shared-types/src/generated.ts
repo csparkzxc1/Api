@@ -693,7 +693,7 @@ export interface components {
             /**
              * @description Base64 ECIES envelope of the provider API key. Layout:
              *     `[32-byte ephemeral pubkey][12-byte iv][16-byte tag][ciphertext]`.
-             *     HKDF salt is the recipient public key, info is `pulsewatch v1`.
+             *     HKDF salt is the recipient public key, info is `cap v1`.
              */
             wrapped_key: string;
             /** @description Must equal the kid returned by GET /v1/wrapping-keys/current */

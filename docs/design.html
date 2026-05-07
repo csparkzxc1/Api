@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Throttle — AI Usage Monitor · Mockup</title>
+<title>Cap — AI Usage Monitor · Mockup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -42,7 +42,7 @@ body::before{
 .section-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.28em;color:var(--text-faint);text-transform:uppercase;margin-bottom:8px}
 .section-title{font-family:'Instrument Serif',serif;font-size:clamp(28px,4vw,40px);font-weight:400;letter-spacing:-.01em;margin-bottom:36px}
 .section-title em{font-style:italic;color:var(--claude)}
-/* abbreviated — full mockup at apps/throttle-figma URL.
+/* abbreviated — full mockup at apps/cap-figma URL.
    The structure of each surface (Apple Watch face, Glance, Galaxy tile,
    Phone dashboard) is reproduced verbatim in the platform code; this file
    is kept as the canonical visual reference for code-side translation. */
@@ -52,15 +52,15 @@ body::before{
 <div class="container">
   <header class="header">
     <div class="eyebrow">Live · Concept Mockup · v0.1</div>
-    <h1 class="title">Throttle.<br><em>Your AI usage,</em><br>at a wrist's glance.</h1>
+    <h1 class="title">Cap.<br><em>Your AI usage,</em><br>at a wrist's glance.</h1>
     <p class="subtitle">Apple Watch · Galaxy Watch · iOS · Android에서 Claude Code와 Codex 사용량을 실시간으로 추적하는 컴패니언 앱.</p>
   </header>
   <p style="color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7">
     Full mockup canvases live in
     <code>docs/design.html</code> (this file). The platform implementations
     pull tokens from <code>docs/design-tokens.md</code> and apply them via
-    <code>PulseWatchKit/Sources/PulseWatchUI/Theme.swift</code> on iOS and
-    <code>android/app/src/main/java/app/pulsewatch/ui/theme/Theme.kt</code>
+    <code>CapKit/Sources/CapUI/Theme.swift</code> on iOS and
+    <code>android/app/src/main/java/app/cap/ui/theme/Theme.kt</code>
     on Android.
   </p>
 </div>

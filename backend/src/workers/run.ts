@@ -7,7 +7,7 @@ import { startPoller } from './poller.js';
 
 async function main() {
   const cfg = loadConfig();
-  const log = pino({ level: cfg.logLevel, name: 'pulsewatch-worker' });
+  const log = pino({ level: cfg.logLevel, name: 'cap-worker' });
   const sql = createSql(cfg.databaseUrl);
   const redis = createRedis(cfg.redisUrl);
   const push = buildPush(cfg, sql, (msg, extra) => log.info(extra ?? {}, msg));

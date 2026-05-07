@@ -16,7 +16,7 @@ impl ApiClient {
             base_url: base_url.into(),
             http: reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(30))
-                .user_agent(concat!("pulsewatch-agent/", env!("CARGO_PKG_VERSION")))
+                .user_agent(concat!("cap-agent/", env!("CARGO_PKG_VERSION")))
                 .build()
                 .expect("reqwest build"),
         }

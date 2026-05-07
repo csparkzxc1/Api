@@ -65,7 +65,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: pulsewatch-agent-${{ matrix.platform.name }}
+          name: cap-agent-${{ matrix.platform.name }}
           path: |
             desktop-agent/src-tauri/target/${{ matrix.platform.target }}/release/bundle/**
             !desktop-agent/src-tauri/target/${{ matrix.platform.target }}/release/bundle/**/*.txt

@@ -7,7 +7,7 @@ use anyhow::{Context, Result};
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
 
-const SERVICE: &str = "app.pulsewatch.agent";
+const SERVICE: &str = "app.cap.agent";
 const ACCOUNT: &str = "session";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

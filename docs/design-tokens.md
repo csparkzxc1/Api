@@ -1,7 +1,7 @@
-# Throttle design tokens
+# Cap design tokens
 
 Single source of truth for every platform. The Swift `Theme` and Kotlin
-`ThrottleTheme` files import these names verbatim — keep this doc in sync.
+`CapTheme` files import these names verbatim — keep this doc in sync.
 
 ## Palette
 

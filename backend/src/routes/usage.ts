@@ -4,7 +4,7 @@ import type {
   ProviderSummary,
   UsageSummary,
   UsageSeries,
-} from '@pulsewatch/shared-types';
+} from '@cap-app/shared-types';
 import { pickCap, projectExhaustion, windowEnd } from '../usage/projection.js';
 
 type WindowName = 'hour' | 'day' | 'week' | 'month' | 'reset_window';

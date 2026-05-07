@@ -1,4 +1,4 @@
-# PulseWatch Android / Wear OS
+# Cap Android / Wear OS
 
 Compose phone app paired with a Wear OS app that ships a Tile and a Watch
 Face Complication. Three Gradle modules, one shared crypto/API core.
@@ -12,20 +12,20 @@ android/
 ├── gradle.properties
 ├── gradle/libs.versions.toml      # version catalog
 ├── core/                          # :core — Android library
-│   └── src/main/java/app/pulsewatch/core/
+│   └── src/main/java/app/cap/core/
 │       ├── api/                   # Models, ApiClient, EnrollmentFlow
 │       ├── vault/                 # SessionStore (EncryptedSharedPreferences),
 │       │                          # EnvelopeCipher (ECIES; BouncyCastle)
 │       └── sync/                  # Data Layer paths shared with :wear
 ├── app/                           # :app — phone application
-│   └── src/main/java/app/pulsewatch/
-│       ├── PulseWatchApp.kt       # Application + service locator
+│   └── src/main/java/app/cap/
+│       ├── CapApp.kt       # Application + service locator
 │       ├── MainActivity.kt
 │       ├── ui/                    # Compose: Onboarding, Dashboard, Accounts,
 │       │                          # AddAccountSheet, Settings + Pair Wear
 │       └── sync/WearSync.kt       # phone → wear via play-services-wearable
 └── wear/                          # :wear — watch application
-    └── src/main/java/app/pulsewatch/wear/
+    └── src/main/java/app/cap/wear/
         ├── WearApp.kt             # Application
         ├── MainActivity.kt        # Compose for Wear glance
         ├── glance/GlanceScreen.kt
@@ -67,11 +67,11 @@ Identical wire format to the iOS `EnvelopeCipher.swift` and the backend
 1. Phone calls `POST /v1/auth/pairings` and gets a 6-digit, 5-minute,
    single-use code.
 2. `WearSync.pushPairingCode(code)` writes a `PutDataItem` on
-   `/pulsewatch/pairing` via `play-services-wearable`.
+   `/cap/pairing` via `play-services-wearable`.
 3. The watch's `WearDataListenerService.onDataChanged` consumes it and calls
    `POST /v1/auth/devices` with `pairing_code` so the watch joins the same
    `user_id` and gets its own bearer token.
-4. The same listener service handles `/pulsewatch/session` for the
+4. The same listener service handles `/cap/session` for the
    read-only path used before the watch enrolls itself.
 5. After either path, the listener triggers
    `TileService.getUpdater(...).requestUpdate(...)` and

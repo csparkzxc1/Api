@@ -1,6 +1,6 @@
-name: PulseWatch
+name: Cap
 options:
-  bundleIdPrefix: app.pulsewatch
+  bundleIdPrefix: app.cap
   deploymentTarget:
     iOS: '17.0'
     watchOS: '10.0'
@@ -16,23 +16,23 @@ settings:
     SWIFT_TREAT_WARNINGS_AS_ERRORS: 'NO'
 
 packages:
-  PulseWatchKit:
-    path: PulseWatchKit
+  CapKit:
+    path: CapKit
 
 targets:
-  PulseWatch:
+  Cap:
     type: application
     platform: iOS
     sources:
-      - path: PulseWatch
+      - path: Cap
     resources:
-      - path: PulseWatch/Resources/Assets.xcassets
+      - path: Cap/Resources/Assets.xcassets
       - path: ../assets/fonts
         type: folder
     info:
-      path: PulseWatch/Resources/Info.plist
+      path: Cap/Resources/Info.plist
       properties:
-        CFBundleDisplayName: PulseWatch
+        CFBundleDisplayName: Cap
         CFBundleShortVersionString: '0.1.0'
         CFBundleVersion: '1'
         UILaunchScreen: {}
@@ -55,60 +55,60 @@ targets:
           - Geist-Bold.ttf
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.pulsewatch.PulseWatch
+        PRODUCT_BUNDLE_IDENTIFIER: app.cap.Cap
         TARGETED_DEVICE_FAMILY: '1,2'
         SWIFT_EMIT_LOC_STRINGS: 'YES'
         GENERATE_INFOPLIST_FILE: 'NO'
         CODE_SIGN_STYLE: Automatic
     dependencies:
-      - package: PulseWatchKit
-        product: PulseWatchKit
-      - target: PulseWatchWatch
+      - package: CapKit
+        product: CapKit
+      - target: CapWatch
         embed: true
 
-  PulseWatchWatch:
+  CapWatch:
     type: application
     platform: watchOS
     sources:
-      - path: PulseWatchWatch
+      - path: CapWatch
     resources:
-      - path: PulseWatchWatch/Resources/Assets.xcassets
+      - path: CapWatch/Resources/Assets.xcassets
       - path: ../assets/fonts
         type: folder
     info:
-      path: PulseWatchWatch/Resources/Info.plist
+      path: CapWatch/Resources/Info.plist
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.pulsewatch.PulseWatch.watchkitapp
+        PRODUCT_BUNDLE_IDENTIFIER: app.cap.Cap.watchkitapp
         TARGETED_DEVICE_FAMILY: '4'
         WATCHOS_DEPLOYMENT_TARGET: '10.0'
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: 'NO'
         SDKROOT: watchos
-        WK_APPLICATION_NAME: PulseWatch
-        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: app.pulsewatch.PulseWatch
+        WK_APPLICATION_NAME: Cap
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: app.cap.Cap
         GENERATE_INFOPLIST_FILE: 'NO'
         CODE_SIGN_STYLE: Automatic
     dependencies:
-      - package: PulseWatchKit
-        product: PulseWatchKit
-      - target: PulseWatchComplications
+      - package: CapKit
+        product: CapKit
+      - target: CapComplications
         embed: true
 
-  PulseWatchComplications:
+  CapComplications:
     type: app-extension
     platform: watchOS
     sources:
-      - path: PulseWatchComplications
+      - path: CapComplications
     info:
-      path: PulseWatchComplications/Resources/Info.plist
+      path: CapComplications/Resources/Info.plist
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: app.pulsewatch.PulseWatch.watchkitapp.complications
+        PRODUCT_BUNDLE_IDENTIFIER: app.cap.Cap.watchkitapp.complications
         TARGETED_DEVICE_FAMILY: '4'
         WATCHOS_DEPLOYMENT_TARGET: '10.0'
         SDKROOT: watchos
         GENERATE_INFOPLIST_FILE: 'NO'
         CODE_SIGN_STYLE: Automatic
     dependencies:
-      - package: PulseWatchKit
-        product: PulseWatchKit
+      - package: CapKit
+        product: CapKit

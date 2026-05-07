@@ -1,4 +1,4 @@
-app = "pulsewatch-api"
+app = "cap-api"
 primary_region = "iad"
 
 [build]

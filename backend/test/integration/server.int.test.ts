@@ -37,9 +37,9 @@ const wrap = generateWrappingKey();
 
 beforeAll(async () => {
   pg = await new PostgreSqlContainer('postgres:16-alpine')
-    .withDatabase('pulsewatch_test')
-    .withUsername('pulsewatch')
-    .withPassword('pulsewatch')
+    .withDatabase('cap_test')
+    .withUsername('cap')
+    .withPassword('cap')
     .start();
   redis = await new RedisContainer('redis:7-alpine').start();
 
@@ -51,7 +51,7 @@ beforeAll(async () => {
   process.env.KEK_KEYS = `k1:${'00'.repeat(32)}`;
   process.env.WRAPPING_KID = 'w1';
   process.env.WRAPPING_PRIVKEY = wrap.privHex;
-  process.env.PORT = '0';
+  process.env.PORT = '8080';
 
   // Apply migrations.
   const sql = postgres(process.env.DATABASE_URL!);
@@ -82,7 +82,7 @@ async function jsonReq(
   const res = await fetch(`${baseUrl}${path}`, {
     method,
     headers: {
-      'content-type': 'application/json',
+      ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
