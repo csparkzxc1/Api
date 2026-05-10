@@ -75,10 +75,9 @@ targets:
       - path: CapWatch/Resources/Assets.xcassets
       - path: ../assets/fonts
         type: folder
-    info:
-      path: CapWatch/Resources/Info.plist
     settings:
       base:
+        INFOPLIST_FILE: CapWatch/Resources/Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: app.cap.Cap.watchkitapp
         TARGETED_DEVICE_FAMILY: '4'
         WATCHOS_DEPLOYMENT_TARGET: '10.0'
@@ -99,10 +98,9 @@ targets:
     platform: watchOS
     sources:
       - path: CapComplications
-    info:
-      path: CapComplications/Resources/Info.plist
     settings:
       base:
+        INFOPLIST_FILE: CapComplications/Resources/Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: app.cap.Cap.watchkitapp.complications
         TARGETED_DEVICE_FAMILY: '4'
         WATCHOS_DEPLOYMENT_TARGET: '10.0'
