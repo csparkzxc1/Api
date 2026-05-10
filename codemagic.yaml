@@ -8,10 +8,8 @@ workflows:
       app_store_connect: cap-asc-admin-key
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: app.cap.Cap
       vars:
+        BUNDLE_ID: "app.cap.Cap"
         XCODE_PROJECT: "ios/Cap.xcodeproj"
         XCODE_SCHEME: "Cap"
         APP_STORE_APPLE_ID: 6768013237
@@ -27,12 +25,24 @@ workflows:
       - name: Install XcodeGen
         script: brew install xcodegen
 
-      - name: Generate Xcode project from project.yml
+      - name: Generate Xcode project
         script: |
           cd ios
           xcodegen generate
 
-      - name: Set up code signing
+      - name: Initialize keychain
+        script: keychain initialize
+
+      - name: Fetch signing files (auto-creates if missing)
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+
+      - name: Add certificates to keychain
+        script: keychaiworkflows:
+  ios-testflight:
+    namely signing on Xcode project
         script: xcode-project use-profiles
 
       - name: Increment build number
@@ -41,9 +51,9 @@ workflows:
           LATEST_BUILD=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID")
           agvtool new-version -all $((LATEST_BUILD + 1))
 
-      - name: Build ipa
-        script: |
-          xcode-project build-ipa \
+      - name      xcode: latest
+
+    trigger        xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
