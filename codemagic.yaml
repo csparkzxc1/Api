@@ -33,16 +33,16 @@ workflows:
       - name: Initialize keychain
         script: keychain initialize
 
-      - name: Fetch signing files (auto-creates if missing)
+      - name: Fetch signing files
         script: |
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
 
       - name: Add certificates to keychain
-        script: keychaiworkflows:
-  ios-testflight:
-    namely signing on Xcode project
+        script: keychain add-certificates
+
+      - name: Apply signing on Xcode project
         script: xcode-project use-profiles
 
       - name: Increment build number
@@ -51,9 +51,9 @@ workflows:
           LATEST_BUILD=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID")
           agvtool new-version -all $((LATEST_BUILD + 1))
 
-      - name      xcode: latest
-
-    trigger        xcode-project build-ipa \
+      - name: Build ipa
+        script: |
+          xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
