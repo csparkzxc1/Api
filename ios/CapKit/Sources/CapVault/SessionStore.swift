@@ -7,6 +7,13 @@ public final class SessionStore: @unchecked Sendable {
         public let token: String
         public let expiresAt: Date
         public let baseURL: URL
+
+        public init(deviceId: String, token: String, expiresAt: Date, baseURL: URL) {
+            self.deviceId = deviceId
+            self.token = token
+            self.expiresAt = expiresAt
+            self.baseURL = baseURL
+        }
     }
 
     private let keychain: Keychain
