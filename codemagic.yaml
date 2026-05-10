@@ -9,7 +9,9 @@ workflows:
 
     environment:
       vars:
-        BUNDLE_ID: "app.cap.Cap"
+        BUNDLE_ID_IOS: "app.cap.Cap"
+        BUNDLE_ID_WATCH: "app.cap.Cap.watchkitapp"
+        BUNDLE_ID_COMPLICATIONS: "app.cap.Cap.watchkitapp.complications"
         XCODE_PROJECT: "ios/Cap.xcodeproj"
         XCODE_SCHEME: "Cap"
         APP_STORE_APPLE_ID: 6768013237
@@ -37,12 +39,15 @@ workflows:
         script: |
           ssh-keygen -t rsa -b 2048 -m PEM -f /tmp/cap_dist.key -q -N ""
 
-      - name: Fetch signing files with new private key
+      - name: Fetch signing files for all 3 targets
         script: |
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create \
-            --certificate-key=@file:/tmp/cap_dist.key
+          for ID in "$BUNDLE_ID_IOS" "$BUNDLE_ID_WATCH" "$BUNDLE_ID_COMPLICATIONS"; do
+            echo "=== Fetching profile for $ID ==="
+            app-store-connect fetch-signing-files "$ID" \
+              --type IOS_APP_STORE \
+              --create \
+              --certificate-key=@file:/tmp/cap_dist.key
+          done
 
       - name: Add certificates to keychain
         script: keychain add-certificates
