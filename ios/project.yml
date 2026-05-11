@@ -56,7 +56,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.cap.Cap
-        TARGETED_DEVICE_FAMILY: '1,2'
+        TARGETED_DEVICE_FAMILY: '1'
         SWIFT_EMIT_LOC_STRINGS: 'YES'
         GENERATE_INFOPLIST_FILE: 'NO'
         CODE_SIGN_STYLE: Automatic
@@ -83,8 +83,6 @@ targets:
         WATCHOS_DEPLOYMENT_TARGET: '10.0'
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: 'NO'
         SDKROOT: watchos
-        WK_APPLICATION_NAME: Cap
-        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: app.cap.Cap
         GENERATE_INFOPLIST_FILE: 'NO'
         CODE_SIGN_STYLE: Automatic
     dependencies:
