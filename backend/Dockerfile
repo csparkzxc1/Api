@@ -28,4 +28,8 @@ COPY --from=build /app/openapi.yaml ./openapi.yaml
 RUN pnpm install --prod --frozen-lockfile=false
 WORKDIR /app/backend
 EXPOSE 8080
-CMD ["node", "dist/server.js"]
+# Run migrations before starting the server. The migrate script reads
+# DATABASE_URL (required) and optionally seeds wrapping_keys from
+# WRAPPING_KID / WRAPPING_PRIVKEY; it tolerates the wrapping envs being
+# absent so the schema still comes up on a fresh deploy.
+CMD ["sh", "-c", "node dist/db/migrate.js && node dist/server.js"]

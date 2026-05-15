@@ -51,11 +51,14 @@ export async function buildServer() {
   await app.register(contextPlugin, { cfg, sql, redis, pollQueue });
   await app.register(authPlugin);
 
-  app.get('/healthz', async () => ({
+  const healthHandler = async () => ({
     status: 'ok' as const,
     version: VERSION,
     time: new Date().toISOString(),
-  }));
+  });
+  app.get('/healthz', healthHandler);
+  // `/health` is the path Railway's healthcheck hits by default.
+  app.get('/health', healthHandler);
 
   const here = path.dirname(fileURLToPath(import.meta.url));
   const specPath = path.join(here, '..', '..', 'openapi.yaml');
