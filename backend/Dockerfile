@@ -28,4 +28,4 @@ COPY --from=build /app/openapi.yaml ./openapi.yaml
 RUN pnpm install --prod --frozen-lockfile=false
 WORKDIR /app/backend
 EXPOSE 8080
-CMD ["node", "dist/server.js"]
+CMD ["sh", "-c", "node dist/db/migrate.js && node dist/server.js"]
