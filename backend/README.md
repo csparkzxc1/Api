@@ -70,10 +70,22 @@ deploy. Required env vars: `DATABASE_URL`, `REDIS_URL`, `KEK_KID`, `KEK_KEYS`,
 `WRAPPING_KID`, `WRAPPING_PRIVKEY`. On first boot with the wrapping envs set,
 migrate.ts seeds `wrapping_keys` idempotently.
 
-The poll worker is **not** part of the web service. To enable polling, create
-a second Railway service from the same image with the start command
-`node dist/workers/run.js`. Without it, jobs accumulate in Redis but never
-process — `last_polled_at` stays NULL and clients see no usage data.
+The poll worker is **not** part of the web service. Without it, jobs accumulate
+in Redis but never process — `last_polled_at` stays NULL and clients see no
+usage data. To enable polling, add a second Railway service:
+
+1. Project dashboard → **`+ New`** → **`GitHub Repo`** → same `csparkzxc1/cap`.
+2. Name it `cap-worker` (or similar).
+3. **Settings** → **Config-as-Code** → **Config Path**: `railway.worker.json`.
+   This swaps the worker's start command to `node dist/workers/run.js` and
+   drops the HTTP healthcheck (a worker has no port to probe — leaving the
+   default `railway.json` config in place causes a restart loop).
+4. **Settings** → **Source** → Branch: same branch as web, Auto Deploy: ON.
+5. **Settings** → **Networking** → do **not** generate a public domain.
+6. **Variables** → copy every var from the web service (right-click → Copy on
+   the web service's Variables panel, then paste into the worker). The worker
+   loads the same `loadConfig()` so it needs the full set including KEK / wrapping.
+7. Deploy. Watch Deploy Logs for `worker started` — that's the ready signal.
 
 ### Fly
 
