@@ -2,7 +2,7 @@ import fp from 'fastify-plugin';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { hashToken } from '../security/crypto.js';
 
-const PUBLIC_PREFIXES = ['/healthz', '/v1/auth/devices', '/openapi.yaml'];
+const PUBLIC_PREFIXES = ['/healthz', '/health', '/v1/auth/devices', '/openapi.yaml'];
 
 export const authPlugin = fp(async (app: FastifyInstance) => {
   app.addHook('preHandler', async (req, reply) => {
