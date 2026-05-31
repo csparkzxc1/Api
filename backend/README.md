@@ -19,7 +19,9 @@ See `openapi.yaml` at the repo root — also served at `GET /openapi.yaml`.
 
 | Method | Path                                  | Notes |
 |--------|---------------------------------------|-------|
-| GET    | `/healthz`                            | public |
+| GET    | `/healthz`                            | liveness probe (public) |
+| GET    | `/health`                             | liveness probe, alias of `/healthz` (Railway default) |
+| GET    | `/ready`                              | readiness probe — pings Postgres + Redis, 503 on failure |
 | POST   | `/v1/auth/devices`                    | enroll a device, returns bearer token |
 | DELETE | `/v1/auth/devices/:id`                | revoke |
 | GET    | `/v1/wrapping-keys/current`           | current ECIES public key for provider-key wrapping |
@@ -57,3 +59,23 @@ whose `last_polled_at` is older than `POLL_INTERVAL_SECONDS` and enqueues one
 job per account, jittered by `POLL_JITTER_SECONDS`. The worker fetches the
 provider Admin/Usage APIs over a 36-hour lookback and upserts into
 `usage_facts` so late-arriving buckets are reconciled.
+
+## Deployment
+
+### Railway
+
+Railway picks up `railway.json` at the repo root. The Dockerfile CMD runs
+`db/migrate.js` before `server.js`, so schema bootstrap is automatic on every
+deploy. Required env vars: `DATABASE_URL`, `REDIS_URL`, `KEK_KID`, `KEK_KEYS`,
+`WRAPPING_KID`, `WRAPPING_PRIVKEY`. On first boot with the wrapping envs set,
+migrate.ts seeds `wrapping_keys` idempotently.
+
+The poll worker is **not** part of the web service. To enable polling, create
+a second Railway service from the same image with the start command
+`node dist/workers/run.js`. Without it, jobs accumulate in Redis but never
+process — `last_polled_at` stays NULL and clients see no usage data.
+
+### Fly
+
+`fly.toml` already defines both `app` (web) and `worker` processes; `flyctl
+deploy` brings them up together. Healthcheck path is `/healthz`.

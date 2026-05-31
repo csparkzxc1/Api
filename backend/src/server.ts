@@ -60,6 +60,31 @@ export async function buildServer() {
   // `/health` is the path Railway's healthcheck hits by default.
   app.get('/health', healthHandler);
 
+  // Deep readiness probe. /health stays a cheap liveness check; /ready
+  // round-trips Postgres and Redis so a broken dependency surfaces as a
+  // 503 in the platform UI instead of silent 5xx on real traffic.
+  app.get('/ready', async (_req, reply) => {
+    const checks: Record<string, 'ok' | string> = {};
+    try {
+      await sql/* sql */`select 1`;
+      checks.db = 'ok';
+    } catch (err) {
+      checks.db = (err as Error).message;
+    }
+    try {
+      const pong = await redis.ping();
+      checks.redis = pong === 'PONG' ? 'ok' : pong;
+    } catch (err) {
+      checks.redis = (err as Error).message;
+    }
+    const ready = checks.db === 'ok' && checks.redis === 'ok';
+    return reply.code(ready ? 200 : 503).send({
+      status: ready ? 'ready' : 'unready',
+      version: VERSION,
+      checks,
+    });
+  });
+
   const here = path.dirname(fileURLToPath(import.meta.url));
   const specPath = path.join(here, '..', '..', 'openapi.yaml');
   app.get('/openapi.yaml', async (_req, reply) => {
