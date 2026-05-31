@@ -108,3 +108,33 @@ targets:
     dependencies:
       - package: CapKit
         product: CapKit
+
+schemes:
+  Cap:
+    build:
+      targets:
+        Cap: all
+        CapWatch: all
+        CapComplications: all
+    run:
+      config: Debug
+      executable: Cap
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+  CapWatch:
+    build:
+      targets:
+        CapWatch: all
+        CapComplications: all
+    run:
+      config: Debug
+      executable: CapWatch
+    archive:
+      config: Release
+
